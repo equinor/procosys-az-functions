@@ -41,7 +41,7 @@ stages:
       buildCommand: build
       envGroup: '${{ variables.envGroupName }}'
       dockerfilePath: '${{ variables.dockerfilePath }}'
-      buildContext: '$(Build.SourcesDirectory)'
+      buildContext: '$(Build.SourcesDirectory)/commissioning-webapp/CommFunctionApp/'
       repository: '${{ variables.repositoryName }}'
       dockerRegistryServiceConnection: '$(dockerRegistryServiceConnectionName)'
 
@@ -54,7 +54,7 @@ stages:
       buildCommand: buildAndPush
       envGroup: '${{ variables.envGroupName }}'
       dockerfilePath: '${{ variables.dockerfilePath }}'
-      buildContext: '$(Build.SourcesDirectory)'
+      buildContext: '$(Build.SourcesDirectory)/commissioning-webapp/CommFunctionApp/'
       repository: '${{ variables.repositoryName }}'
       dockerRegistryServiceConnection: '$(dockerRegistryServiceConnectionName)'
 
