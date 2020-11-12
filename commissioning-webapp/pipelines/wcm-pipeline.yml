@@ -14,10 +14,75 @@ resources:
 # Global variables for the pipeline
 variables:
   - template: templates/variables/procosys-global-variables.yml@templates
-  - template: templates/variables/wcm-variables.yml@templates
+  - template: templates/variables/comm-webapp-variables.yml@templates
+
   - name: 'repositoryName'
-    value: 'wcm/functions'
-  - name: 'buildConfiguration'
-    value: 'Release' 
-  - name: 'vmImageName'
-    value: 'ubuntu-latest'
+    value: func/cwa
+
+stages:
+# Build Stage
+- stage: build
+  displayName: 'Build'
+  variables:
+    envName: 'build'
+    serviceConnection: '${{ variables.nonProdServiceConnection }}'
+    containerRegistry: '${{ variables.containerRegistryName }}'
+    envGroupName: '$(globalPrefix)-$(fullAppName)-${{ variables.envName }}'
+    dockerfilePath: 'commissioning-webapp/CommFunctionApp/Dockerfile'
+    dockerRegistryServiceConnection: '$(dockerRegistryServiceConnectionName)'
+
+  jobs:
+  # Docker Build
+  - template: /templates/pipelines/dockerbuild-comm-webapp.yml@templates
+    parameters:
+      dependsOn: ''
+      deploymentName: 'docker_build'
+      condition: and(always(), eq(variables['Build.Reason'], 'PullRequest'))
+      buildCommand: build
+      envGroup: '${{ variables.envGroupName }}'
+      dockerfilePath: '${{ variables.dockerfilePath }}'
+      buildContext: '$(Build.SourcesDirectory)'
+      repository: '${{ variables.repositoryName }}'
+      dockerRegistryServiceConnection: '$(dockerRegistryServiceConnectionName)'
+
+  # Docker Build and Push
+  - template: /templates/pipelines/dockerbuild-comm-webapp.yml@templates
+    parameters:
+      dependsOn: ''
+      deploymentName: 'docker_build_push'
+      condition: and(always(), ne(variables['Build.Reason'], 'PullRequest'))
+      buildCommand: buildAndPush
+      envGroup: '${{ variables.envGroupName }}'
+      dockerfilePath: '${{ variables.dockerfilePath }}'
+      buildContext: '$(Build.SourcesDirectory)'
+      repository: '${{ variables.repositoryName }}'
+      dockerRegistryServiceConnection: '$(dockerRegistryServiceConnectionName)'
+
+# # Deploy to Dev
+# - stage: dev
+#   displayName: 'Deploy to Dev'
+#   dependsOn: 'build'
+#   condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/add-commissioning-function'))
+#   variables:
+#     envName: 'dev'
+#     envLabel: 'non-prod'
+#     envRg: '${{ variables.envRgName }}'
+#     envGroupName: '$(globalPrefix)-$(fullAppName)-${{ variables.envName }}'
+#     serviceConnection: '${{ variables.nonProdServiceConnection }}'
+#     containerRegistry: '${{ variables.containerRegistryName }}'
+
+#   jobs:
+#   # Deploy to AKS
+#   - template: /templates/pipelines/kubernetes/function-cwa-deploy.yml@templates
+#     parameters:
+#       deploymentName: 'deploy_to_k8s'
+#       dependsOn: ''
+#       serviceConnection: '${{ variables.serviceConnection }}'
+#       env: '${{ variables.envName }}'
+#       envRg: '${{ variables.aksRgName }}'
+#       envGroup: '${{ variables.envGroupName }}'
+#       dockerImage: '${{ variables.containerRegistry }}.azurecr.io/${{ variables.repositoryName }}:$(Build.BuildId)'
+#       clusterName: '${{ variables.aksTestName }}'
+#       kvName: '${{ variables.kvName }}'
+#       kvRgName: '${{ variables.kvRgName }}'
+#       kvConnStringsSecret: '${{ variables.connStringSecretName }}'
