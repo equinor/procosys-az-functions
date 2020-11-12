@@ -1,7 +1,7 @@
 trigger:
   paths:
     include:
-      - webapp-configuration-manager/*
+      - commissioning-webapp/*
 
 resources:
   repositories:

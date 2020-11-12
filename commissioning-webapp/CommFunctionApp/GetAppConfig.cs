@@ -8,7 +8,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Configuration.AddAzureAppConfiguration;
+using Microsoft.Extensions.Configuration.AzureAppConfiguration;
 
 namespace GetAppConfig
 {
@@ -34,3 +34,4 @@ namespace GetAppConfig
         }
     }
 }
+
