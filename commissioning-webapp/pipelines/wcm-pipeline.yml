@@ -33,7 +33,7 @@ stages:
 
   jobs:
   # Docker Build
-  - template: /templates/pipelines/dockerbuild-comm-webapp.yml@templates
+  - template: /templates/pipelines/dockerbuild-cwa.yml@templates
     parameters:
       dependsOn: ''
       deploymentName: 'docker_build'
@@ -46,7 +46,7 @@ stages:
       dockerRegistryServiceConnection: '$(dockerRegistryServiceConnectionName)'
 
   # Docker Build and Push
-  - template: /templates/pipelines/dockerbuild-comm-webapp.yml@templates
+  - template: /templates/pipelines/dockerbuild-cwa.yml@templates
     parameters:
       dependsOn: ''
       deploymentName: 'docker_build_push'
