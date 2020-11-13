@@ -41,7 +41,7 @@ stages:
       buildCommand: build
       envGroup: '${{ variables.envGroupName }}'
       dockerfilePath: '${{ variables.dockerfilePath }}'
-      buildContext: '$(Build.SourcesDirectory)/commissioning-webapp/CommFunctionApp/'
+      buildContext: '$(Build.SourcesDirectory)/commissioning-webapp/'
       repository: '${{ variables.repositoryName }}'
       dockerRegistryServiceConnection: '$(dockerRegistryServiceConnectionName)'
 
@@ -54,7 +54,7 @@ stages:
       buildCommand: buildAndPush
       envGroup: '${{ variables.envGroupName }}'
       dockerfilePath: '${{ variables.dockerfilePath }}'
-      buildContext: '$(Build.SourcesDirectory)/commissioning-webapp/CommFunctionApp/'
+      buildContext: '$(Build.SourcesDirectory)/commissioning-webapp/'
       repository: '${{ variables.repositoryName }}'
       dockerRegistryServiceConnection: '$(dockerRegistryServiceConnectionName)'
 
@@ -62,7 +62,7 @@ stages:
 # - stage: dev
 #   displayName: 'Deploy to Dev'
 #   dependsOn: 'build'
-#   condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/add-commissioning-function'))
+#   condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/dev'))
 #   variables:
 #     envName: 'dev'
 #     envLabel: 'non-prod'
@@ -72,17 +72,15 @@ stages:
 #     containerRegistry: '${{ variables.containerRegistryName }}'
 
 #   jobs:
-#   # Deploy to AKS
-#   - template: /templates/pipelines/kubernetes/function-cwa-deploy.yml@templates
+#   # Deploy Function App
+#   - template: /templates/pipelines/function-cwa-release.yml@templates
 #     parameters:
-#       deploymentName: 'deploy_to_k8s'
 #       dependsOn: ''
+#       deploymentName: 'publish'
 #       serviceConnection: '${{ variables.serviceConnection }}'
-#       env: '${{ variables.envName }}'
-#       envRg: '${{ variables.aksRgName }}'
+#       functionApp: '$(globalPrefix)-$(fullAppName)-dev-func'
 #       envGroup: '${{ variables.envGroupName }}'
-#       dockerImage: '${{ variables.containerRegistry }}.azurecr.io/${{ variables.repositoryName }}:$(Build.BuildId)'
-#       clusterName: '${{ variables.aksTestName }}'
-#       kvName: '${{ variables.kvName }}'
-#       kvRgName: '${{ variables.kvRgName }}'
-#       kvConnStringsSecret: '${{ variables.connStringSecretName }}'
+#       rgName: '${{ variables.envRg }}'
+#       repository: ${{ variables.repositoryName }}
+#       containerRegistry: '${{ variables.containerRegistry }}'
+#       keyVaultUrl: '${{ variables.kvName }}'
