@@ -6,14 +6,14 @@ EXPOSE 80
 
 FROM mcr.microsoft.com/dotnet/sdk:5.0-buster-slim AS build
 WORKDIR /src
-COPY ["ProCoSys-Config.csproj", ""]
-RUN dotnet restore "./ProCoSys-Config.csproj"
+COPY ["Equinor.ProCoSys.Config.csproj", ""]
+RUN dotnet restore "./Equinor.ProCoSys.Config.csproj"
 COPY . .
 WORKDIR "/src/."
-RUN dotnet build "ProCoSys-Config.csproj" -c Release -o /app/build
+RUN dotnet build "Equinor.ProCoSys.Config.csproj" -c Release -o /app/build
 
 FROM build AS publish
-RUN dotnet publish "ProCoSys-Config.csproj" -c Release -o /app/publish
+RUN dotnet publish "Equinor.ProCoSys.Config.csproj" -c Release -o /app/publish
 
 FROM base AS final
 WORKDIR /home/site/wwwroot

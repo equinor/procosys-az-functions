@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.30717.126
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProCoSys-Config", "ProCoSys-Config.csproj", "{04F0C35E-8371-4687-BF00-310822A8E248}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Equinor.ProCoSys.Config", "Equinor.ProCoSys.Config.csproj", "{76FC7C60-9933-4BD2-90C0-6C2BF8D78F48}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -11,15 +11,15 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{04F0C35E-8371-4687-BF00-310822A8E248}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{04F0C35E-8371-4687-BF00-310822A8E248}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{04F0C35E-8371-4687-BF00-310822A8E248}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{04F0C35E-8371-4687-BF00-310822A8E248}.Release|Any CPU.Build.0 = Release|Any CPU
+		{76FC7C60-9933-4BD2-90C0-6C2BF8D78F48}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{76FC7C60-9933-4BD2-90C0-6C2BF8D78F48}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{76FC7C60-9933-4BD2-90C0-6C2BF8D78F48}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{76FC7C60-9933-4BD2-90C0-6C2BF8D78F48}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
-		SolutionGuid = {AB669B35-3485-4176-819A-C148E17B6BDC}
+		SolutionGuid = {40B38654-CCE8-41CC-8F8C-4AEA20794E23}
 	EndGlobalSection
 EndGlobal

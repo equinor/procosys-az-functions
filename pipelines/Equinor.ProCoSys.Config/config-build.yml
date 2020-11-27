@@ -16,7 +16,7 @@ stages:
     containerRegistry: '${{ variables.containerRegistryName }}'
     envGroupName: '$(globalPrefix)-api-${{ variables.envName }}'
     dockerRegistryServiceConnection: '$(dockerRegistryServiceConnectionName)'
-    dockerfilePath: '$(Build.SourcesDirectory)/src/Equinor.ProCoSys-Config/Dockerfile'
+    dockerfilePath: '$(Build.SourcesDirectory)/src/Equinor.ProCoSys.Config/Dockerfile'
 
   jobs:
   # Docker Build
@@ -28,6 +28,6 @@ stages:
       envGroup: '${{ variables.envGroupName }}'
       buildCommand: build
       dockerfilePath: '${{ variables.dockerfilePath }}'
-      buildContext: '$(Build.SourcesDirectory)/src/Equinor.ProCoSys-Config'
+      buildContext: '$(Build.SourcesDirectory)/src/Equinor.ProCoSys.Config'
       repository: '${{ variables.repositoryName }}'
       dockerRegistryServiceConnection: '$(dockerRegistryServiceConnectionName)'

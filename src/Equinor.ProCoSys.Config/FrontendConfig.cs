@@ -8,7 +8,7 @@ using Microsoft.Extensions.Logging;
 using System;
 using System.Threading.Tasks;
 
-namespace ProCoSys_Config
+namespace Equinor.ProCoSys.Config
 {
     public static class FrontendConfig
     {
