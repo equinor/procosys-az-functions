@@ -1,0 +1,36 @@
+
+# Global variables for the pipeline
+variables:
+- template: templates/variables/procosys-global-variables.yml@templates
+
+- name: 'repositoryName'
+  value: 'config/api'
+
+stages:
+# Build stage. Docker build, tag and push
+- stage: build
+  displayName: 'Build'
+  dependsOn: ''
+  variables:
+    envName: 'build'
+    envRg: '${{ variables.envRgName }}'
+    containerRegistry: '${{ variables.containerRegistryName }}'
+    envGroupName: '$(globalPrefix)-api-${{ variables.envName }}'
+    dockerRegistryServiceConnection: '$(dockerRegistryServiceConnectionName)'
+    dockerfilePath: '$(Build.SourcesDirectory)/src/Equinor.ProCoSys-Config/Dockerfile'
+
+  jobs:
+  # Docker Build
+  - template: /templates/pipelines/dockerbuild-preservation.yml@templates
+    parameters:
+      deploymentName: 'docker_build'
+      dependsOn: ''
+      condition: and(succeeded(), ne(variables['Build.SourceBranch'], 'refs/heads/master'))
+      env: 'pcs-${{ variables.envName }}'
+      envGroup: '${{ variables.envGroupName }}'
+      buildCommand: build
+      versionNumber: ${{ variables.versionNumber }}
+      dockerfilePath: '${{ variables.dockerfilePath }}'
+      buildContext: '$(Build.SourcesDirectory)/src'
+      repository: '${{ variables.repositoryName }}'
+      dockerRegistryServiceConnection: '$(dockerRegistryServiceConnectionName)'
