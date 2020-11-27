@@ -31,15 +31,52 @@ stages:
     dockerfilePath: '$(Build.SourcesDirectory)/src/Equinor.ProCoSys.Config/Dockerfile'
 
   jobs:
-  # Docker Build
+  # Docker Build Not Main
   - template: /templates/pipelines/dockerbuild-config-api.yml@templates
     parameters:
       deploymentName: 'docker_build'
       dependsOn: ''
-      condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
+      condition: and(succeeded(), ne(variables['Build.SourceBranch'], 'refs/heads/main'))
       envGroup: '${{ variables.envGroupName }}'
       buildCommand: build
       dockerfilePath: '${{ variables.dockerfilePath }}'
       buildContext: '$(Build.SourcesDirectory)/src/Equinor.ProCoSys.Config'
       repository: '${{ variables.repositoryName }}'
       dockerRegistryServiceConnection: '$(dockerRegistryServiceConnectionName)'
+
+  # Docker Build Main
+  - template: /templates/pipelines/dockerbuild-config-api.yml@templates
+    parameters:
+      deploymentName: 'docker_build'
+      dependsOn: ''
+      condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
+      envGroup: '${{ variables.envGroupName }}'
+      buildCommand: buildAndPush
+      dockerfilePath: '${{ variables.dockerfilePath }}'
+      buildContext: '$(Build.SourcesDirectory)/src/Equinor.ProCoSys.Config'
+      repository: '${{ variables.repositoryName }}'
+      dockerRegistryServiceConnection: '$(dockerRegistryServiceConnectionName)'
+
+# Release stage
+- stage: release
+  displayName: 'Release'
+  dependsOn: 'build'
+  condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
+  variables:
+    envName: 'release'
+    envRg: 'pcs-config-non-prod-rg'
+    envGroupName: '$(globalPrefix)-config-api-${{ variables.envName }}'
+    serviceConnection: '${{ variables.nonProdServiceConnection }}'
+    containerRegistry: '${{ variables.containerRegistryName }}' 
+
+  jobs:
+  # Release to Function App
+  - template: /templates/pipelines/config-api-release.yml@templates
+    parameters:
+      dependsOn: ''
+      deploymentName: 'release_to_function_app'
+      serviceConnection: '${{ variables.serviceConnection }}'
+      envRg: '${{ variables.envRg }}'
+      envGroup: '${{ variables.envGroupName }}'
+      dockerImage: '${{ variables.containerRegistry }}.azurecr.io/${{ variables.repositoryName }}:$(Build.BuildId)'
+      functionApp: 'pcs-config-non-prod-fa'
