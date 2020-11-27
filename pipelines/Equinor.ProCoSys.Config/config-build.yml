@@ -1,3 +1,15 @@
+trigger:
+  branches:
+    include:
+      - main
+
+resources:
+  repositories:
+  - repository: self
+  - repository: templates
+    type: github
+    name: equinor/procosys-infra
+    endpoint: 'procosys - github'
 
 # Global variables for the pipeline
 variables:
