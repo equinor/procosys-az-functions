@@ -14,7 +14,7 @@ stages:
   variables:
     envName: 'build'
     containerRegistry: '${{ variables.containerRegistryName }}'
-    envGroupName: '$(globalPrefix)-api-${{ variables.envName }}'
+    envGroupName: '$(globalPrefix)-config-api-${{ variables.envName }}'
     dockerRegistryServiceConnection: '$(dockerRegistryServiceConnectionName)'
     dockerfilePath: '$(Build.SourcesDirectory)/src/Equinor.ProCoSys.Config/Dockerfile'
 
