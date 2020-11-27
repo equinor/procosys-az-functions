@@ -10,7 +10,7 @@ COPY ["Equinor.ProCoSys.Config.csproj", ""]
 RUN dotnet restore "./Equinor.ProCoSys.Config.csproj"
 COPY . .
 WORKDIR "/src/."
-RUN dotnet build "Equinor.ProCoSys.Config.csproj" -c Release -o /app/build
+RUN dotnet build "Equinor.ProCoSys.Config.csproj" -c Release -f netcoreapp3.1 -o /app/build
 
 FROM build AS publish
 RUN dotnet publish "Equinor.ProCoSys.Config.csproj" -c Release -o /app/publish
