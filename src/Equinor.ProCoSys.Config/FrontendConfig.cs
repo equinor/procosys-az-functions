@@ -14,12 +14,12 @@ namespace Equinor.ProCoSys.Config
     {
         [FunctionName("Frontend")]
         public static async Task<IActionResult> Run(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "get", "post", Route = null)] HttpRequest req,
+            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = null)] HttpRequest req,
             ILogger log)
         {
             log.LogInformation("Processing configuration request...");
 
-            var configConnectionString = Environment.GetEnvironmentVariable("ConnectionStrings:FrontendConfig");
+            var configConnectionString = Environment.GetEnvironmentVariable("FrontendConfig");
             var environment = "dev";
             var builder = new ConfigurationBuilder();
             builder.AddAzureAppConfiguration(options =>
