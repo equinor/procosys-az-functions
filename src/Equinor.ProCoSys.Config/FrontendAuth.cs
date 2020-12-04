@@ -3,35 +3,39 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Configuration.AzureAppConfiguration;
 using Microsoft.Extensions.Logging;
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace Equinor.ProCoSys.Config
 {
-    public static class FrontendConfig
+    public static class FrontendAuth
     {
-        [FunctionName("Frontend")]
+        [FunctionName("FrontendAuth")]
         public static async Task<IActionResult> Run(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = null)] HttpRequest req,
+            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "Frontend/Auth")] HttpRequest req,
             ILogger log)
         {
             log.LogInformation("Processing configuration request...");
 
             var configConnectionString = Environment.GetEnvironmentVariable("FrontendConfig");
             var environment = "dev";
-            var builder = new ConfigurationBuilder();
-            builder.AddAzureAppConfiguration(options =>
+            var configRoot = new ConfigurationBuilder().AddAzureAppConfiguration(options =>
             {
                 options
                 .Connect(configConnectionString)
-                .Select(KeyFilter.Any, LabelFilter.Null)
-                .Select(KeyFilter.Any, environment);
-            });
-            var configuration = builder.Build();
+                .Select("Auth2", environment);
+            }).Build();
 
-            return new OkObjectResult(configuration.AsEnumerable());
+            var configuration = configRoot.AsEnumerable();
+
+            return (configuration.Count()) switch
+            {
+                0 => new NotFoundResult(),
+                1 => new OkObjectResult(configuration.ElementAt(0).Value),
+                _ => new ConflictResult(),
+            };
         }
     }
 }

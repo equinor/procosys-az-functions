@@ -12,6 +12,7 @@
     <PackageReference Include="Microsoft.Azure.AppConfiguration.AspNetCore" Version="4.0.0" />
     <PackageReference Include="Microsoft.NET.Sdk.Functions" Version="3.0.11" />
     <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.10.9" />
+    <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
   </ItemGroup>
   <ItemGroup>
     <None Update="host.json">
