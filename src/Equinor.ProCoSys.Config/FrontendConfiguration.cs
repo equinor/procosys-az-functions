@@ -25,6 +25,8 @@ namespace Equinor.ProCoSys.Config
             ClaimsPrincipal identities = req.HttpContext.User;
 
             var currentUserEmail = identities.FindFirstValue(ClaimTypes.Email);
+            if (string.IsNullOrWhiteSpace(currentUserEmail))
+                return new BadRequestResult();
             var currentUserDomain = currentUserEmail[(currentUserEmail.IndexOf('@') + 1)..];
 
             var bearerToken = req.HttpContext.Request.Headers["Authentication"];
