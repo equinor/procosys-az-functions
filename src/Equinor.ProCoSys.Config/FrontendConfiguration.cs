@@ -23,7 +23,7 @@ namespace Equinor.ProCoSys.Config
 
             ClaimsPrincipal identities = req.HttpContext.User;
 
-            var currentUserEmail = identities.FindFirstValue(ClaimTypes.Email) ?? string.Empty;
+            var currentUserEmail = identities?.FindFirstValue(ClaimTypes.Email) ?? string.Empty;
             var currentUserDomain = string.Empty;
             if (currentUserEmail.Length > 1)
             {
