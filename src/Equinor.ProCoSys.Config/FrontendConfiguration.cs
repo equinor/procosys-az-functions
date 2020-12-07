@@ -9,7 +9,6 @@ using Newtonsoft.Json;
 using System;
 using System.Linq;
 using System.Security.Claims;
-using System.Threading.Tasks;
 
 namespace Equinor.ProCoSys.Config
 {
@@ -25,9 +24,11 @@ namespace Equinor.ProCoSys.Config
             ClaimsPrincipal identities = req.HttpContext.User;
 
             var currentUserEmail = identities.FindFirstValue(ClaimTypes.Email) ?? string.Empty;
-            if (string.IsNullOrWhiteSpace(currentUserEmail))
-                return new BadRequestResult();
-            var currentUserDomain = currentUserEmail[(currentUserEmail.IndexOf('@') + 1)..];
+            var currentUserDomain = string.Empty;
+            if (currentUserEmail.Length > 1)
+            {
+                currentUserDomain = currentUserEmail[(currentUserEmail.IndexOf('@') + 1)..];
+            }
 
             var bearerToken = req.HttpContext.Request.Headers["Authentication"];
             var configConnectionString = Environment.GetEnvironmentVariable("FrontendConfig");
