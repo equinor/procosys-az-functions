@@ -6,14 +6,13 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Linq;
-using System.Threading.Tasks;
 
 namespace Equinor.ProCoSys.Config
 {
     public static class FrontendAuth
     {
         [FunctionName("FrontendAuth")]
-        public static async Task<IActionResult> Run(
+        public static IActionResult Run(
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "Frontend/Auth")] HttpRequest req,
             ILogger log)
         {

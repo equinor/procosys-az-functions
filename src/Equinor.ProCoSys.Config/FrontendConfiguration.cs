@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.WebJobs;
@@ -14,9 +15,10 @@ namespace Equinor.ProCoSys.Config
 {
     public static class FrontendConfiguration
     {
+        [Authorize]
         [FunctionName("FrontendConfiguration")]
         public static IActionResult Run(
-            [HttpTrigger(AuthorizationLevel.User, "get", Route = "Frontend/Configuration")] HttpRequest req,
+            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "Frontend/Configuration")] HttpRequest req,
             ILogger log)
         {
             log.LogInformation("Processing configuration request...");
