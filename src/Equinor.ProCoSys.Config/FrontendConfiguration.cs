@@ -23,7 +23,17 @@ namespace Equinor.ProCoSys.Config
         {
             log.LogInformation("Processing configuration request...");
             ClaimsPrincipal identities = req.HttpContext.User;
-            return new OkObjectResult(identities);
+            var id = identities?.Identity;
+            if (id == null)
+            {
+                log.LogInformation("Not authorized...");
+                return new OkObjectResult("Not authorized");
+            }
+            else
+            {
+                log.LogInformation("Authorized...");
+                return new OkObjectResult(id);
+            }
 
             var currentUserEmail = identities?.FindFirstValue(ClaimTypes.Email) ?? string.Empty;
             var currentUserDomain = string.Empty;
