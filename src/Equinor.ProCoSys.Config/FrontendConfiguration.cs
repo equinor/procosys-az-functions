@@ -6,10 +6,13 @@ using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Configuration.AzureAppConfiguration;
 using Microsoft.Extensions.Logging;
+using Microsoft.IdentityModel.Protocols;
+using Microsoft.IdentityModel.Protocols.OpenIdConnect;
+using Microsoft.IdentityModel.Tokens;
 using Newtonsoft.Json;
 using System;
+using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
-using System.Security.Claims;
 
 namespace Equinor.ProCoSys.Config
 {
@@ -22,27 +25,28 @@ namespace Equinor.ProCoSys.Config
             ILogger log)
         {
             log.LogInformation("Processing configuration request...");
-            ClaimsPrincipal identities = req.HttpContext.User;
-            var id = identities?.Identity;
-            if (id == null)
+            var authenticationHeader = req.Headers.FirstOrDefault(x => x.Key == "Authorization");
+            if (authenticationHeader.Key == null)
             {
-                log.LogInformation("Not authorized...");
-                return new OkObjectResult("Not authorized");
+                return new BadRequestResult();
             }
-            else
+            var token = authenticationHeader.Value.ToString().Replace("Bearer ", null);
+
+            var discoveryEndpoint = Environment.GetEnvironmentVariable("DiscoveryEndpoint");
+            var audience = Environment.GetEnvironmentVariable("Audience");
+            var issuer = Environment.GetEnvironmentVariable("Issuer");
+            if (!TryValidate(token, out JwtSecurityToken securityToken, discoveryEndpoint, audience, issuer))
             {
-                log.LogInformation("Authorized...");
-                return new OkObjectResult(id);
+                return new UnauthorizedResult();
             }
 
-            var currentUserEmail = identities?.FindFirstValue(ClaimTypes.Email) ?? string.Empty;
+            var currentUserEmail = securityToken.Claims.FirstOrDefault(x => x.Type == "upn")?.Value ?? string.Empty;
             var currentUserDomain = string.Empty;
             if (currentUserEmail.Length > 1)
             {
                 currentUserDomain = currentUserEmail[(currentUserEmail.IndexOf('@') + 1)..];
             }
 
-            var bearerToken = req.HttpContext.Request.Headers["Authentication"];
             var configConnectionString = Environment.GetEnvironmentVariable("FrontendConfig");
             var environment = Environment.GetEnvironmentVariable("Environment");
 
@@ -89,16 +93,40 @@ namespace Equinor.ProCoSys.Config
             // Result
             string json = JsonConvert.SerializeObject(configSet, Formatting.Indented);
             return new OkObjectResult(json);
+        }
 
-            /*
-            var features = new List<KeyValuePair<string,object>>();
-            foreach (var prop in configuration)
+        public static bool TryValidate(string token, out JwtSecurityToken securityToken, string discoveryEndpoint, string audience, string issuer)
+        {
+            try
             {
-                var json = JsonConvert.DeserializeObject<object>(prop.Value);
-                features.Add(new KeyValuePair<string, object>(prop.Key, json));
+                var configManager = new ConfigurationManager<OpenIdConnectConfiguration>(
+                    discoveryEndpoint,
+                    new OpenIdConnectConfigurationRetriever());
+
+                OpenIdConnectConfiguration config = configManager.GetConfigurationAsync().Result;
+                TokenValidationParameters validationParameters = new TokenValidationParameters
+                {
+                    //decode the JWT to see what these values should be
+                    ValidAudience = audience,
+                    ValidIssuer = issuer,
+                    ValidateAudience = true,
+                    ValidateIssuer = true,
+                    IssuerSigningKeys = config.SigningKeys,
+                    ValidateLifetime = true
+                };
+
+                JwtSecurityTokenHandler tokendHandler = new JwtSecurityTokenHandler();
+
+                tokendHandler.ValidateToken(token, validationParameters, out SecurityToken jwt);
+
+                securityToken = jwt as JwtSecurityToken;
+                return true;
             }
-            return new OkObjectResult(features);
-            */
+            catch (Exception)
+            {
+                securityToken = null;
+                return false;
+            }
         }
     }
 }
