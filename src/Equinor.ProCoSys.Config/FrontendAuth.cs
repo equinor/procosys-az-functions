@@ -19,12 +19,17 @@ namespace Equinor.ProCoSys.Config
             log.LogInformation("Processing configuration request...");
 
             var configConnectionString = Environment.GetEnvironmentVariable("FrontendConfig");
-            var environment = "dev";
+
+            var environment = EnvironmentSelector.GetEnvironment(req.HttpContext.Request.Headers.FirstOrDefault(x => x.Key == "Origin").Value);
+            if (string.IsNullOrWhiteSpace(environment))
+            {
+                return new BadRequestObjectResult("Invalid origin");
+            }
             var configRoot = new ConfigurationBuilder().AddAzureAppConfiguration(options =>
             {
                 options
                 .Connect(configConnectionString)
-                .Select("Auth2", environment);
+                .Select("Auth", environment);
             }).Build();
 
             var configuration = configRoot.AsEnumerable();
