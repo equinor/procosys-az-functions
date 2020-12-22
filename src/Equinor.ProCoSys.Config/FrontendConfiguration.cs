@@ -25,9 +25,9 @@ namespace Equinor.ProCoSys.Config
             var authenticationHeader = req.Headers.FirstOrDefault(x => x.Key == "Authorization");
             if (authenticationHeader.Key == null)
             {
-                return new BadRequestResult();
+                return new UnauthorizedResult();
             }
-            var token = authenticationHeader.Value.ToString().Replace("Bearer ", null);
+            var token = authenticationHeader.Value.ToString()?.Replace("Bearer ", null) ?? string.Empty;
 
             var discoveryEndpoint = Environment.GetEnvironmentVariable("DiscoveryEndpoint");
             var audience = Environment.GetEnvironmentVariable("Audience");
@@ -44,7 +44,12 @@ namespace Equinor.ProCoSys.Config
                 currentUserDomain = currentUserEmail[(currentUserEmail.IndexOf('@') + 1)..];
             }
 
-            var environment = EnvironmentSelector.GetEnvironment(req.HttpContext.Request.Headers.FirstOrDefault(x => x.Key == "Origin").Value);
+            var originHeader = req.HttpContext.Request.Headers.FirstOrDefault(x => x.Key == "Origin");
+            if (originHeader.Key == null)
+            {
+                return new BadRequestObjectResult("Invalid origin");
+            }
+            var environment = EnvironmentSelector.GetEnvironment(originHeader.Value);
             if (string.IsNullOrWhiteSpace(environment))
             {
                 return new BadRequestObjectResult("Invalid origin");
