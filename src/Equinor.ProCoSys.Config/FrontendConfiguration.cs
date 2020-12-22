@@ -18,7 +18,7 @@ namespace Equinor.ProCoSys.Config
         [Authorize]
         [FunctionName("FrontendConfiguration")]
         public static IActionResult Run(
-            [HttpTrigger(AuthorizationLevel.User, "get", Route = "Frontend/Configuration")] HttpRequest req,
+            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "Frontend/Configuration")] HttpRequest req,
             ILogger log)
         {
             log.LogInformation("Processing configuration request...");
