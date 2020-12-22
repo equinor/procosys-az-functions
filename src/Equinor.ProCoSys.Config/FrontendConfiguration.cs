@@ -94,7 +94,7 @@ namespace Equinor.ProCoSys.Config
                     }
                 }
 
-                configSet.FeatureFlags.Add(feature.Id, enabled.ToString());
+                configSet.FeatureFlags.Add(feature.Id, enabled);
             }
 
             // Result
