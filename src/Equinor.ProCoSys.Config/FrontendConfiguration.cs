@@ -47,8 +47,13 @@ namespace Equinor.ProCoSys.Config
                 currentUserDomain = currentUserEmail[(currentUserEmail.IndexOf('@') + 1)..];
             }
 
+            var environment = GetEnvironment(req.HttpContext.Request.Headers.FirstOrDefault(x => x.Key == "Origin").Value);
+            if (string.IsNullOrWhiteSpace(environment))
+            {
+                return new BadRequestObjectResult("Invalid origin");
+            }
+
             var configConnectionString = Environment.GetEnvironmentVariable("FrontendConfig");
-            var environment = Environment.GetEnvironmentVariable("Environment");
 
             // Read Configuration
             var configuration = new ConfigurationBuilder()
@@ -126,6 +131,29 @@ namespace Equinor.ProCoSys.Config
             {
                 securityToken = null;
                 return false;
+            }
+        }
+
+        public static string GetEnvironment(string origin)
+        {
+            var devOrigins = Environment.GetEnvironmentVariable("DevOrigins").Split(';').ToList();
+            var testOrigins = Environment.GetEnvironmentVariable("TestOrigins").Split(';').ToList();
+            var prodOrigins = Environment.GetEnvironmentVariable("ProdOrigins").Split(';').ToList();
+            if (devOrigins.Contains(origin))
+            {
+                return "dev";
+            }
+            else if (testOrigins.Contains(origin))
+            {
+                return "test";
+            }
+            else if (prodOrigins.Contains(origin))
+            {
+                return "prod";
+            }
+            else
+            {
+                return string.Empty;
             }
         }
     }
