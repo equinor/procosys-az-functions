@@ -79,4 +79,4 @@ stages:
       envRg: '${{ variables.envRg }}'
       envGroup: '${{ variables.envGroupName }}'
       dockerImage: '${{ variables.containerRegistry }}.azurecr.io/${{ variables.repositoryName }}:$(Build.BuildId)'
-      functionApp: 'pcs-config-non-prod-fa'
+      functionApp: 'pcs-config-non-prod-func'
