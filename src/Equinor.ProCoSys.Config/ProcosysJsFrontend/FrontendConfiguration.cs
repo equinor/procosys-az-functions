@@ -1,3 +1,6 @@
+using System;
+using System.IdentityModel.Tokens.Jwt;
+using System.Linq;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -7,11 +10,8 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Configuration.AzureAppConfiguration;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
-using System;
-using System.IdentityModel.Tokens.Jwt;
-using System.Linq;
 
-namespace Equinor.ProCoSys.Config
+namespace Equinor.ProCoSys.Config.ProcosysJsFrontend
 {
     public static class FrontendConfiguration
     {
@@ -72,7 +72,17 @@ namespace Equinor.ProCoSys.Config
             // Config
             foreach (var item in configuration.Where(x => !x.Key.StartsWith('.')))
             {
-                configSet.Configuration.Add(item.Key, item.Value);
+                try
+                {
+                    object parsedConfig = JsonConvert.DeserializeObject(item.Value);
+                    configSet.Configuration.Add(item.Key, parsedConfig);
+                }
+                catch (Exception e)
+                {
+                    log.LogWarning(e,$"Failed to format JSON for config key: {item.Key}. If this is a plain value, like a number or string, its expected", item);
+                    log.LogInformation(e,$"Falling back to adding RAW value to output config for key: {item.Key}", item);
+                    configSet.Configuration.Add(item.Key, item.Value);
+                }
             }
 
             // Feature Flags
@@ -99,7 +109,7 @@ namespace Equinor.ProCoSys.Config
 
             // Result
             string json = JsonConvert.SerializeObject(configSet, Formatting.Indented);
-            return new OkObjectResult(json);
+            return new JsonResult(json);
         }
     }
 }
