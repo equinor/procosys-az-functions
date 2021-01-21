@@ -1,6 +1,7 @@
 using System;
 using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
+using System.Text;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -10,6 +11,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Configuration.AzureAppConfiguration;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
 
 namespace Equinor.ProCoSys.Config.ProcosysJsFrontend
 {
@@ -107,9 +109,25 @@ namespace Equinor.ProCoSys.Config.ProcosysJsFrontend
                 configSet.FeatureFlags.Add(feature.Id, enabled);
             }
 
-            // Result
-            string json = JsonConvert.SerializeObject(configSet, Formatting.Indented);
-            return new JsonResult(json);
+            // Javascript uses camelCasing
+            // lets avoid the headache of forcing them to use PascalCasing inherited from our properties. 
+            var contractResolver = new DefaultContractResolver
+            {
+                NamingStrategy = new CamelCaseNamingStrategy()
+            };
+
+            string json = JsonConvert.SerializeObject(configSet, new JsonSerializerSettings
+            {
+                ContractResolver = contractResolver
+            });
+
+            // We need to manually set the content result type, as we have already converted
+            // the response to a valid json string. If we try to use jsonResult, then it will reformat the string value. 
+            return new ContentResult
+            {
+                Content = json,
+                ContentType = "application/json"
+            };
         }
     }
 }
