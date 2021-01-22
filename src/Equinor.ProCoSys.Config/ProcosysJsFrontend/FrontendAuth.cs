@@ -1,13 +1,16 @@
+using System;
+using System.Linq;
+using System.Web.Http;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using System;
-using System.Linq;
+using Newtonsoft.Json;
+using ConflictResult = Microsoft.AspNetCore.Mvc.ConflictResult;
 
-namespace Equinor.ProCoSys.Config
+namespace Equinor.ProCoSys.Config.ProcosysJsFrontend
 {
     public static class FrontendAuth
     {
@@ -29,17 +32,31 @@ namespace Equinor.ProCoSys.Config
             {
                 options
                 .Connect(configConnectionString)
-                .Select("Auth", environment);
+                .Select("auth", environment);
             }).Build();
 
             var configuration = configRoot.AsEnumerable();
-
-            return (configuration.Count()) switch
+            var count = configuration.Count(); // Avoiding multiple enumerations where possible.
+            if (count <= 0)
             {
-                0 => new NotFoundResult(),
-                1 => new OkObjectResult(configuration.ElementAt(0).Value),
-                _ => new ConflictResult(),
-            };
+                return new NotFoundResult();
+            }
+
+            if (count > 1)
+            {
+                return new ConflictResult();
+            }
+
+            try
+            {
+                object response = JsonConvert.DeserializeObject(configuration.ElementAt(0).Value);
+                return new JsonResult(response);
+            }
+            catch (Exception e)
+            {
+                log.LogError(e,"Failed to parse JSON from string in App Configuration", configuration);
+                return new InternalServerErrorResult();
+            }
         }
     }
 }
