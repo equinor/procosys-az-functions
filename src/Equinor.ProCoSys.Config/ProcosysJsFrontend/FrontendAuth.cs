@@ -42,7 +42,7 @@ namespace Equinor.ProCoSys.Config.ProcosysJsFrontend
                 return new NotFoundResult();
             }
 
-            if (count >= 2)
+            if (count > 1)
             {
                 return new ConflictResult();
             }
