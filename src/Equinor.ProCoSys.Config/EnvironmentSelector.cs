@@ -7,7 +7,6 @@ namespace Equinor.ProCoSys.Config
     {
         public static string GetEnvironment(string origin)
         {
-            return "dev";
             var devOrigins = Environment.GetEnvironmentVariable("DevOrigins").Split(';').ToList();
             var testOrigins = Environment.GetEnvironmentVariable("TestOrigins").Split(';').ToList();
             var prodOrigins = Environment.GetEnvironmentVariable("ProdOrigins").Split(';').ToList();
