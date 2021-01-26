@@ -21,7 +21,7 @@ namespace Equinor.ProCoSys.Config.CommWebApp
         {
             log.LogInformation("Processing configuration request...");
 
-            var configConnectionString = Environment.GetEnvironmentVariable("FrontendConfig");
+            var configConnectionString = Environment.GetEnvironmentVariable("CommWebAppConfig");
 
             var environment = EnvironmentSelector.GetEnvironment(req.HttpContext.Request.Headers.FirstOrDefault(x => x.Key == "Origin").Value);
             if (string.IsNullOrWhiteSpace(environment))

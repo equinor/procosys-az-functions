@@ -57,7 +57,7 @@ namespace Equinor.ProCoSys.Config.CommWebApp
                 return new BadRequestObjectResult("Invalid origin");
             }
 
-            var configConnectionString = Environment.GetEnvironmentVariable("FrontendConfig");
+            var configConnectionString = Environment.GetEnvironmentVariable("CommWebAppConfig");
 
             // Read Configuration
             var configuration = new ConfigurationBuilder()
