@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using System.Text.RegularExpressions;
 
 namespace Equinor.ProCoSys.Config
 {
@@ -7,25 +8,49 @@ namespace Equinor.ProCoSys.Config
     {
         public static string GetEnvironment(string origin)
         {
-            var devOrigins = Environment.GetEnvironmentVariable("DevOrigins").Split(';').ToList();
-            var testOrigins = Environment.GetEnvironmentVariable("TestOrigins").Split(';').ToList();
-            var prodOrigins = Environment.GetEnvironmentVariable("ProdOrigins").Split(';').ToList();
-            if (devOrigins.Contains(origin))
+            var devOrigins = Environment.GetEnvironmentVariable("DevOrigins")?.Split(';').ToList();
+            var testOrigins = Environment.GetEnvironmentVariable("TestOrigins")?.Split(';').ToList();
+            var prodOrigins = Environment.GetEnvironmentVariable("ProdOrigins")?.Split(';').ToList();
+
+            var templateStrings = devOrigins?.Where(d => d.Contains("*"));
+
+            if ((
+                from templateString in templateStrings 
+                from devOrigin in devOrigins 
+                where devOrigin.ContainsLike(templateString) select templateString).Any())
             {
                 return "dev";
             }
-            else if (testOrigins.Contains(origin))
+
+            if (devOrigins != null && devOrigins.Contains(origin))
+            {
+                return "dev";
+            }
+
+            if (testOrigins != null && testOrigins.Contains(origin))
             {
                 return "test";
             }
-            else if (prodOrigins.Contains(origin))
+
+            if (prodOrigins != null && prodOrigins.Contains(origin))
             {
                 return "prod";
             }
-            else
-            {
-                return string.Empty;
-            }
+
+            return string.Empty;
         }
     }
+    public static class OriginStringExtensions 
+    {
+        public static bool ContainsLike(this string source, string like)
+        {
+            if (string.IsNullOrEmpty(source) || string.IsNullOrEmpty(like))
+            {
+                return false;
+            }
+			var regex = "^" + like.Replace("*", "[0-9]+") + "$";
+
+            return Regex.IsMatch(source, regex);
+        }
+	}
 }
