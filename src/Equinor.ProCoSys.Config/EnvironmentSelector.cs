@@ -12,10 +12,12 @@ namespace Equinor.ProCoSys.Config
             var testOrigins = Environment.GetEnvironmentVariable("TestOrigins")?.Split(';').ToList();
             var prodOrigins = Environment.GetEnvironmentVariable("ProdOrigins")?.Split(';').ToList();
 
-            var templateStrings = devOrigins?.Where(d => d.Contains("*"));
+            var devTemplates = devOrigins?.Where(d => d.Contains("*"));
+            var testTemplates = testOrigins?.Where(d => d.Contains("*"));
+            var prodTemplates = prodOrigins?.Where(d => d.Contains("*"));
 
             if ((
-                from templateString in templateStrings
+                from templateString in devTemplates
                 where origin.ContainsLike(templateString) select templateString).Any())
             {
                 return "dev";
@@ -26,9 +28,23 @@ namespace Equinor.ProCoSys.Config
                 return "dev";
             }
 
+            if ((
+                from templateString in testTemplates
+                where origin.ContainsLike(templateString) select templateString).Any())
+            {
+                return "test";
+            }
+
             if (testOrigins != null && testOrigins.Contains(origin))
             {
                 return "test";
+            }
+
+            if ((
+                from templateString in prodTemplates
+                where origin.ContainsLike(templateString) select templateString).Any())
+            {
+                return "prod";
             }
 
             if (prodOrigins != null && prodOrigins.Contains(origin))
@@ -51,7 +67,7 @@ namespace Equinor.ProCoSys.Config
 
             return Regex.IsMatch(
                 source, 
-                "^" + like.Replace("*", "[0-9]+") + "$");
+                "^" + like.Replace("*", ".*") + "$");
         }
 	}
 }
