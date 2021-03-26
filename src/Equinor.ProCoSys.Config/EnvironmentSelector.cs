@@ -15,9 +15,8 @@ namespace Equinor.ProCoSys.Config
             var templateStrings = devOrigins?.Where(d => d.Contains("*"));
 
             if ((
-                from templateString in templateStrings 
-                from devOrigin in devOrigins 
-                where devOrigin.ContainsLike(templateString) select templateString).Any())
+                from templateString in templateStrings
+                where origin.ContainsLike(templateString) select templateString).Any())
             {
                 return "dev";
             }
@@ -40,7 +39,7 @@ namespace Equinor.ProCoSys.Config
             return string.Empty;
         }
     }
-    public static class OriginStringExtensions 
+    public static class WildcardStringExtensions 
     {
         public static bool ContainsLike(this string source, string like)
         {
