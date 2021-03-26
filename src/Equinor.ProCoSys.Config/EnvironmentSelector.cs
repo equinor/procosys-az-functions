@@ -39,6 +39,7 @@ namespace Equinor.ProCoSys.Config
             return string.Empty;
         }
     }
+
     public static class WildcardStringExtensions 
     {
         public static bool ContainsLike(this string source, string like)
@@ -47,9 +48,10 @@ namespace Equinor.ProCoSys.Config
             {
                 return false;
             }
-			var regex = "^" + like.Replace("*", "[0-9]+") + "$";
 
-            return Regex.IsMatch(source, regex);
+            return Regex.IsMatch(
+                source, 
+                "^" + like.Replace("*", "[0-9]+") + "$");
         }
 	}
 }
