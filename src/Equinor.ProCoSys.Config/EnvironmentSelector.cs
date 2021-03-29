@@ -16,7 +16,7 @@ namespace Equinor.ProCoSys.Config
             var testTemplates = testOrigins?.Where(d => d.Contains("*"));
             var prodTemplates = prodOrigins?.Where(d => d.Contains("*"));
 
-            if ((
+            if (devTemplates != null && (
                 from templateString in devTemplates
                 where origin.ContainsLike(templateString) select templateString).Any())
             {
@@ -28,7 +28,7 @@ namespace Equinor.ProCoSys.Config
                 return "dev";
             }
 
-            if ((
+            if (testTemplates != null && (
                 from templateString in testTemplates
                 where origin.ContainsLike(templateString) select templateString).Any())
             {
@@ -40,7 +40,7 @@ namespace Equinor.ProCoSys.Config
                 return "test";
             }
 
-            if ((
+            if (prodTemplates != null && (
                 from templateString in prodTemplates
                 where origin.ContainsLike(templateString) select templateString).Any())
             {
