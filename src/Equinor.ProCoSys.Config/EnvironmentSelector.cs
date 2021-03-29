@@ -12,6 +12,22 @@ namespace Equinor.ProCoSys.Config
             var testOrigins = Environment.GetEnvironmentVariable("TestOrigins")?.Split(';').ToList();
             var prodOrigins = Environment.GetEnvironmentVariable("ProdOrigins")?.Split(';').ToList();
 
+            if (devOrigins != null && devOrigins.Contains(origin))
+            {
+                return "dev";
+            }
+            
+            if (testOrigins != null && testOrigins.Contains(origin))
+            {
+                return "test";
+            }
+
+            if (prodOrigins != null && prodOrigins.Contains(origin))
+            {
+                return "prod";
+            }
+
+            // Wildcards
             var devTemplates = devOrigins?.Where(d => d.Contains("*"));
             var testTemplates = testOrigins?.Where(d => d.Contains("*"));
             var prodTemplates = prodOrigins?.Where(d => d.Contains("*"));
@@ -23,11 +39,6 @@ namespace Equinor.ProCoSys.Config
                 return "dev";
             }
 
-            if (devOrigins != null && devOrigins.Contains(origin))
-            {
-                return "dev";
-            }
-
             if (testTemplates != null && (
                 from templateString in testTemplates
                 where origin.ContainsLike(templateString) select templateString).Any())
@@ -35,19 +46,9 @@ namespace Equinor.ProCoSys.Config
                 return "test";
             }
 
-            if (testOrigins != null && testOrigins.Contains(origin))
-            {
-                return "test";
-            }
-
             if (prodTemplates != null && (
                 from templateString in prodTemplates
                 where origin.ContainsLike(templateString) select templateString).Any())
-            {
-                return "prod";
-            }
-
-            if (prodOrigins != null && prodOrigins.Contains(origin))
             {
                 return "prod";
             }
