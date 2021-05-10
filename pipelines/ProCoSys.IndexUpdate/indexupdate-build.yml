@@ -1,0 +1,110 @@
+trigger:
+  branches:
+    include:
+      - main
+
+resources:
+  repositories:
+  - repository: self
+  - repository: templates
+    type: github
+    name: equinor/procosys-infra
+    endpoint: 'equinor'
+    ref: infra/docker_indexupdate
+
+# Global variables for the pipeline
+variables:
+- template: templates/variables/procosys-global-variables.yml@templates
+- template: templates/variables/indexupdate-variables.yml@templates
+
+- name: 'repositoryName'
+  value: 'indexupdate'
+
+stages:
+# Build stage. Docker build, tag and push
+- stage: 'Build'
+  displayName: 'Build'
+  dependsOn: ''
+  variables:
+    envName: 'build'
+    containerRegistry: '${{ variables.containerRegistryName }}'
+    envGroupName: '$(globalPrefix)-indexupdate-${{ variables.envName }}'
+    dockerRegistryServiceConnection: '$(dockerRegistryServiceConnectionName)'
+    dockerfilePath: '$(Build.SourcesDirectory)/src/ProCoSys.IndexUpdate/Dockerfile'
+
+  jobs:
+  # Docker Build Not Main
+  - template: /templates/pipelines/dockerbuild-indexupdate.yml@templates
+    parameters:
+      dependsOn: ''
+      deploymentName: 'docker_build'
+      condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
+      envGroup: '${{ variables.envGroupName }}'
+      buildCommand: build
+      dockerfilePath: '${{ variables.dockerfilePath }}'
+      buildContext: '$(Build.SourcesDirectory)/src/ProCoSys.IndexUpdate'
+      repository: '${{ variables.repositoryName }}'
+      dockerRegistryServiceConnection: '$(dockerRegistryServiceConnectionName)'
+
+  # Docker Build Main
+  - template: /templates/pipelines/dockerbuild-indexupdate.yml@templates
+    parameters:
+      dependsOn: ''
+      deploymentName: 'docker_build_push'
+      condition: and(succeeded(), ne(variables['Build.SourceBranch'], 'refs/heads/main'))
+      envGroup: '${{ variables.envGroupName }}'
+      buildCommand: buildAndPush
+      dockerfilePath: '${{ variables.dockerfilePath }}'
+      buildContext: '$(Build.SourcesDirectory)/src/ProCoSys.IndexUpdate'
+      repository: '${{ variables.repositoryName }}'
+      dockerRegistryServiceConnection: '$(dockerRegistryServiceConnectionName)'
+
+# Release stage Non-Prod
+- stage: 'NonProd'
+  displayName: 'Release Non-Prod'
+  dependsOn: 'Build'
+  condition: and(succeeded(), ne(variables['Build.SourceBranch'], 'refs/heads/main'))
+  variables:
+    envName: 'non-prod'
+    envRg: '${{ variables.envRgName }}'
+    envGroupName: '$(globalPrefix)-indexupdate-${{ variables.envName }}'
+    serviceConnection: '${{ variables.nonProdServiceConnection }}'
+    containerRegistry: '${{ variables.containerRegistryName }}' 
+
+  jobs:
+  # Release to Function App
+  - template: /templates/pipelines/indexupdate-release.yml@templates
+    parameters:
+      dependsOn: ''
+      deploymentName: 'release_to_function_app'
+      serviceConnection: '${{ variables.serviceConnection }}'
+      rgName: '${{ variables.envRg }}'
+      envGroup: '${{ variables.envGroupName }}'
+      dockerImage: '${{ variables.containerRegistry }}.azurecr.io/${{ variables.repositoryName }}:$(Build.BuildId)'
+      functionApp: '${{ variables.functionAppName }}'
+      kvUri: '${{ variables.kvUriName }}'
+
+# Release stage Prod
+- stage: 'Prod'
+  displayName: 'Release Prod'
+  dependsOn: 'NonProd'
+  condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
+  variables:
+    envName: 'prod'
+    envRg: '${{ variables.envRgName }}'
+    envGroupName: '$(globalPrefix)-indexupdate-${{ variables.envName }}'
+    serviceConnection: '${{ variables.prodServiceConnection }}'
+    containerRegistry: '${{ variables.containerRegistryName }}' 
+
+  jobs:
+  # Release to Function App
+  - template: /templates/pipelines/indexupdate-release.yml@templates
+    parameters:
+      dependsOn: ''
+      deploymentName: 'release_to_function_app'
+      serviceConnection: '${{ variables.serviceConnection }}'
+      rgName: '${{ variables.envRg }}'
+      envGroup: '${{ variables.envGroupName }}'
+      dockerImage: '${{ variables.containerRegistry }}.azurecr.io/${{ variables.repositoryName }}:$(Build.BuildId)'
+      functionApp: '${{ variables.functionAppName }}'
+      kvUri: '${{ variables.kvUriName }}'
