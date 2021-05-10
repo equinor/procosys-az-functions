@@ -23,9 +23,9 @@ namespace ProCoSys.IndexUpdate
             try
             {
                 // Search Index Configuration
-                var indexName = Environment.GetEnvironmentVariable("Index:Name");
-                var indexEndpoint = Environment.GetEnvironmentVariable("Index:Endpoint");
-                var indexKey = Environment.GetEnvironmentVariable("Index:Key");
+                var indexName = Environment.GetEnvironmentVariable("Index_Name");
+                var indexEndpoint = Environment.GetEnvironmentVariable("Index_Endpoint");
+                var indexKey = Environment.GetEnvironmentVariable("Index_Key");
 
                 if (indexName == null || indexEndpoint == null || indexKey == null)
                 {
