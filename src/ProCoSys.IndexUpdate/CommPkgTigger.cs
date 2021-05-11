@@ -21,9 +21,9 @@ namespace ProCoSys.IndexUpdate
             try
             {
                 // Search Index Configuration
-                var indexName = Environment.GetEnvironmentVariable("Index:Name");
-                var indexEndpoint = Environment.GetEnvironmentVariable("Index:Endpoint");
-                var indexKey = Environment.GetEnvironmentVariable("Index:Key");
+                var indexName = Environment.GetEnvironmentVariable("Index_Name");
+                var indexEndpoint = Environment.GetEnvironmentVariable("Index_Endpoint");
+                var indexKey = Environment.GetEnvironmentVariable("Index_Key");
 
                 if (indexName == null || indexEndpoint == null || indexKey == null)
                 {
@@ -42,71 +42,74 @@ namespace ProCoSys.IndexUpdate
                 var msg = JsonSerializer.Deserialize<CommPkgTopic>(mySbMsg);
 
                 // Calculate key for document
-                var key = KeyHelper.GenerateKey($"commpkg:{msg.Plant}:{msg.ProjectName}:{ msg.CommPkgNo}");
-
-                // Create new document
-                var doc = new IndexDocument
+                if (msg != null)
                 {
-                    Key = key,
-                    LastUpdated = msg.LastUpdated,
-                    Plant = msg.Plant,
-                    PlantName = msg.PlantName,
-                    Project = msg.ProjectName,
-                    ProjectNames = msg.ProjectNames ?? new List<string>(),
+                    var key = KeyHelper.GenerateKey($"commpkg:{msg.Plant}:{msg.ProjectName}:{ msg.CommPkgNo}");
 
-                    CommPkg = new CommPkg
+                    // Create new document
+                    var doc = new IndexDocument
                     {
-                        CommPkgNo = msg.CommPkgNo,
-                        Description = msg.Description,
-                        DescriptionOfWork = msg.DescriptionOfWork,
-                        Remark = msg.Remark,
-                        Responsible = msg.ResponsibleCode + " " + msg.ResponsibleDescription,
-                        Area = msg.AreaCode + " " + msg.AreaDescription
-                    }
-                };
+                        Key = key,
+                        LastUpdated = msg.LastUpdated,
+                        Plant = msg.Plant,
+                        PlantName = msg.PlantName,
+                        Project = msg.ProjectName,
+                        ProjectNames = msg.ProjectNames ?? new List<string>(),
 
-                var options = new IndexDocumentsOptions { ThrowOnAnyError = true };
-
-                // Remove old document from index if CommPkg is moved (has ProjectNameOld)
-                if (msg.ProjectNameOld != null)
-                {
-                    // Calculate key for the old document
-                    var keyOldDoc = KeyHelper.GenerateKey($"commpkg:{msg.Plant}:{msg.ProjectNameOld}:{msg.CommPkgNo}");
-
-                    //Locate old document in index
-                    var oldDoc = (IndexDocument)client.GetDocument<IndexDocument>(keyOldDoc);
-
-                    try
-                    {
-                        var deleteBatch = IndexDocumentsBatch.Create(IndexDocumentsAction.Delete(oldDoc));
-                        client.IndexDocuments(deleteBatch, options);
-                    }
-                    catch (Exception ex)
-                    {
-                        throw new Exception($"Failed to delete document: {key}. Message {ex.Message}");
-                    }
-
-                    // Update Projectname for any related McPkgs
-                    var searchOptions = new SearchOptions
-                    {
-                        Filter = $"(McPkg/CommPkgNo eq '{oldDoc.CommPkg.CommPkgNo}')"
+                        CommPkg = new CommPkg
+                        {
+                            CommPkgNo = msg.CommPkgNo,
+                            Description = msg.Description,
+                            DescriptionOfWork = msg.DescriptionOfWork,
+                            Remark = msg.Remark,
+                            Responsible = msg.ResponsibleCode + " " + msg.ResponsibleDescription,
+                            Area = msg.AreaCode + " " + msg.AreaDescription
+                        }
                     };
 
-                    SearchResults<IndexDocument> response = client.Search<IndexDocument>("", searchOptions);
-                    var docs = new List<IndexDocument>();
-                    foreach (SearchResult<IndexDocument> result in response.GetResults())
-                    {
-                        result.Document.Project = msg.ProjectName;
-                        result.Document.ProjectNames = msg.ProjectNames;
-                        docs.Add((result.Document));
-                    }
-                    IndexDocumentsBatch<IndexDocument> mcPkGs = IndexDocumentsBatch.MergeOrUpload(docs);
-                    client.IndexDocuments(mcPkGs, options);
-                }
+                    var options = new IndexDocumentsOptions { ThrowOnAnyError = true };
 
-                // Add or update the document in the index index
-                IndexDocumentsBatch<IndexDocument> batch = IndexDocumentsBatch.Create(IndexDocumentsAction.MergeOrUpload(doc));
-                client.IndexDocuments(batch, options);
+                    // Remove old document from index if CommPkg is moved (has ProjectNameOld)
+                    if (msg.ProjectNameOld != null)
+                    {
+                        // Calculate key for the old document
+                        var keyOldDoc = KeyHelper.GenerateKey($"commpkg:{msg.Plant}:{msg.ProjectNameOld}:{msg.CommPkgNo}");
+
+                        //Locate old document in index
+                        var oldDoc = (IndexDocument)client.GetDocument<IndexDocument>(keyOldDoc);
+
+                        try
+                        {
+                            var deleteBatch = IndexDocumentsBatch.Create(IndexDocumentsAction.Delete(oldDoc));
+                            client.IndexDocuments(deleteBatch, options);
+                        }
+                        catch (Exception ex)
+                        {
+                            throw new Exception($"Failed to delete document: {key}. Message {ex.Message}");
+                        }
+
+                        // Update Projectname for any related McPkgs
+                        var searchOptions = new SearchOptions
+                        {
+                            Filter = $"(McPkg/CommPkgNo eq '{oldDoc.CommPkg.CommPkgNo}')"
+                        };
+
+                        var response = (SearchResults<IndexDocument>)client.Search<IndexDocument>("", searchOptions);
+                        var docs = new List<IndexDocument>();
+                        foreach (SearchResult<IndexDocument> result in response.GetResults())
+                        {
+                            result.Document.Project = msg.ProjectName;
+                            result.Document.ProjectNames = msg.ProjectNames;
+                            docs.Add((result.Document));
+                        }
+                        IndexDocumentsBatch<IndexDocument> mcPkGs = IndexDocumentsBatch.MergeOrUpload(docs);
+                        client.IndexDocuments(mcPkGs, options);
+                    }
+
+                    // Add or update the document in the index index
+                    var batch = IndexDocumentsBatch.Create(IndexDocumentsAction.MergeOrUpload(doc));
+                    client.IndexDocuments(batch, options);
+                }
             }
             catch (Exception e)
             {

@@ -42,55 +42,58 @@ namespace ProCoSys.IndexUpdate
                 var msg = JsonSerializer.Deserialize<McPkgTopic>(mySbMsg);
 
                 // Calculate key for document
-                var key = KeyHelper.GenerateKey($"mcpkg:{msg.Plant}:{msg.ProjectName}:{msg.CommPkgNo}:{msg.McPkgNo}");
-
-                // Create new document
-                var doc = new IndexDocument
+                if (msg != null)
                 {
-                    Key = key,
-                    LastUpdated = msg.LastUpdated,
-                    Plant = msg.Plant,
-                    PlantName = msg.PlantName,
-                    Project = msg.ProjectName,
-                    ProjectNames = msg.ProjectNames ?? new List<string>(),
+                    var key = KeyHelper.GenerateKey($"mcpkg:{msg.Plant}:{msg.ProjectName}:{msg.CommPkgNo}:{msg.McPkgNo}");
 
-                    McPkg = new McPkg
+                    // Create new document
+                    var doc = new IndexDocument
                     {
-                        McPkgNo = msg.McPkgNo,
-                        CommPkgNo = msg.CommPkgNo,
-                        Description = msg.Description,
-                        Remark = msg.Remark,
-                        Responsible = msg.ResponsibleCode + " " + msg.ResponsibleDescription,
-                        Area = msg.AreaCode + " " + msg.AreaDescription,
-                        Discipline = msg.Discipline,
-                    }
-                };
+                        Key = key,
+                        LastUpdated = msg.LastUpdated,
+                        Plant = msg.Plant,
+                        PlantName = msg.PlantName,
+                        Project = msg.ProjectName,
+                        ProjectNames = msg.ProjectNames ?? new List<string>(),
 
-                var options = new IndexDocumentsOptions { ThrowOnAnyError = true };
+                        McPkg = new McPkg
+                        {
+                            McPkgNo = msg.McPkgNo,
+                            CommPkgNo = msg.CommPkgNo,
+                            Description = msg.Description,
+                            Remark = msg.Remark,
+                            Responsible = msg.ResponsibleCode + " " + msg.ResponsibleDescription,
+                            Area = msg.AreaCode + " " + msg.AreaDescription,
+                            Discipline = msg.Discipline,
+                        }
+                    };
 
-                // Remove old document from index if McPkg is moved (has CommPkgNoOld or McPkgNoOld)
-                if (msg.CommPkgNoOld != null || msg.McPkgNoOld != null)
-                {
-                    // Calculate key for the old document
-                    var keyOldDoc = KeyHelper.GenerateKey($"mcpkg:{msg.Plant}:{msg.ProjectName}:{msg.CommPkgNoOld??msg.CommPkgNo}:{msg.McPkgNoOld??msg.McPkgNo}");
+                    var options = new IndexDocumentsOptions { ThrowOnAnyError = true };
 
-                    //Locate old document in index
-                    var oldDoc = (IndexDocument)client.GetDocument<IndexDocument>(keyOldDoc);
+                    // Remove old document from index if McPkg is moved (has CommPkgNoOld or McPkgNoOld)
+                    if (msg.CommPkgNoOld != null || msg.McPkgNoOld != null)
+                    {
+                        // Calculate key for the old document
+                        var keyOldDoc = KeyHelper.GenerateKey($"mcpkg:{msg.Plant}:{msg.ProjectName}:{msg.CommPkgNoOld??msg.CommPkgNo}:{msg.McPkgNoOld??msg.McPkgNo}");
+
+                        //Locate old document in index
+                        var oldDoc = (IndexDocument)client.GetDocument<IndexDocument>(keyOldDoc);
                     
-                    try
-                    {
-                        var deleteBatch = IndexDocumentsBatch.Create(IndexDocumentsAction.Delete(oldDoc));
-                        client.IndexDocuments(deleteBatch, options);
+                        try
+                        {
+                            var deleteBatch = IndexDocumentsBatch.Create(IndexDocumentsAction.Delete(oldDoc));
+                            client.IndexDocuments(deleteBatch, options);
+                        }
+                        catch (Exception ex)
+                        {
+                            throw new Exception($"Failed to delete document: {key}. Message {ex.Message}");
+                        }
                     }
-                    catch (Exception ex)
-                    {
-                        throw new Exception($"Failed to delete document: {key}. Message {ex.Message}");
-                    }
-                }
 
-                // Add or update the document in the index index
-                var addBatch = IndexDocumentsBatch.Create(IndexDocumentsAction.MergeOrUpload(doc));
-                client.IndexDocuments(addBatch, options);
+                    // Add or update the document in the index index
+                    var addBatch = IndexDocumentsBatch.Create(IndexDocumentsAction.MergeOrUpload(doc));
+                    client.IndexDocuments(addBatch, options);
+                }
             }
             catch (Exception e)
             {
