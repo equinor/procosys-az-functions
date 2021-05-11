@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Text;
 using System.Text.Json;
 using Azure;
 using Azure.Search.Documents;
@@ -14,7 +13,6 @@ namespace ProCoSys.IndexUpdate
 {
     public static class McPkgTigger
     {
-
         [FunctionName("McPkgTigger")]
         public static void Run([ServiceBusTrigger("mcpkg", "search_mcpkg", Connection = "ConnectionString")]string mySbMsg, ILogger log)
         {
@@ -34,48 +32,68 @@ namespace ProCoSys.IndexUpdate
                 }
 
                 // Get the service endpoint and API key from the environment
-                Uri endpoint = new Uri(indexEndpoint);
+                var endpoint = new Uri(indexEndpoint);
 
                 // Create a client
-                AzureKeyCredential credential = new AzureKeyCredential(indexKey);
-                SearchClient client = new SearchClient(endpoint, indexName, credential);
+                var credential = new AzureKeyCredential(indexKey);
+                var client = new SearchClient(endpoint, indexName, credential);
 
                 // Deserialize message
                 var msg = JsonSerializer.Deserialize<McPkgTopic>(mySbMsg);
 
                 // Calculate key for document
-                var keyString = $"mcpkg:{msg.Plant}:{msg.ProjectName}:{ msg.CommPkgNo}:{ msg.McPkgNo}";
-                var keyBytes = Encoding.UTF8.GetBytes(keyString);
-                var key = Convert.ToBase64String(keyBytes);
-
-                // Create new document
-                var doc = new IndexDocument
+                if (msg != null)
                 {
-                    Key = key,
-                    LastUpdated = msg.LastUpdated,
-                    Plant = msg.Plant,
-                    PlantName = msg.PlantName,
-                    Project = msg.ProjectName,
-                    ProjectNames = msg.ProjectNames ?? new List<string>(),
+                    var key = KeyHelper.GenerateKey($"mcpkg:{msg.Plant}:{msg.ProjectName}:{msg.CommPkgNo}:{msg.McPkgNo}");
 
-                    McPkg = new McPkg
+                    // Create new document
+                    var doc = new IndexDocument
                     {
-                        McPkgNo = msg.McPkgNo,
-                        CommPkgNo = msg.CommPkgNo,
-                        Description = msg.Description,
-                        Remark = msg.Remark,
-                        Responsible = msg.ResponsibleCode + " " + msg.ResponsibleDescription,
-                        Area = msg.AreaCode + " " + msg.AreaDescription,
-                        Discipline = msg.Discipline,
-                    }
-                };
+                        Key = key,
+                        LastUpdated = msg.LastUpdated,
+                        Plant = msg.Plant,
+                        PlantName = msg.PlantName,
+                        Project = msg.ProjectName,
+                        ProjectNames = msg.ProjectNames ?? new List<string>(),
 
-                // Add or update the document in the index index
-                IndexDocumentsBatch<IndexDocument> batch = IndexDocumentsBatch.Create(
-                    IndexDocumentsAction.MergeOrUpload(doc));
-                IndexDocumentsOptions options1 = new IndexDocumentsOptions { ThrowOnAnyError = true };
-                var resp = client.IndexDocuments(batch, options1);
-                Console.WriteLine(resp.Value);
+                        McPkg = new McPkg
+                        {
+                            McPkgNo = msg.McPkgNo,
+                            CommPkgNo = msg.CommPkgNo,
+                            Description = msg.Description,
+                            Remark = msg.Remark,
+                            Responsible = msg.ResponsibleCode + " " + msg.ResponsibleDescription,
+                            Area = msg.AreaCode + " " + msg.AreaDescription,
+                            Discipline = msg.Discipline,
+                        }
+                    };
+
+                    var options = new IndexDocumentsOptions { ThrowOnAnyError = true };
+
+                    // Remove old document from index if McPkg is moved (has CommPkgNoOld or McPkgNoOld)
+                    if (msg.CommPkgNoOld != null || msg.McPkgNoOld != null)
+                    {
+                        // Calculate key for the old document
+                        var keyOldDoc = KeyHelper.GenerateKey($"mcpkg:{msg.Plant}:{msg.ProjectName}:{msg.CommPkgNoOld??msg.CommPkgNo}:{msg.McPkgNoOld??msg.McPkgNo}");
+
+                        //Locate old document in index
+                        var oldDoc = (IndexDocument)client.GetDocument<IndexDocument>(keyOldDoc);
+                    
+                        try
+                        {
+                            var deleteBatch = IndexDocumentsBatch.Create(IndexDocumentsAction.Delete(oldDoc));
+                            client.IndexDocuments(deleteBatch, options);
+                        }
+                        catch (Exception ex)
+                        {
+                            throw new Exception($"Failed to delete document: {key}. Message {ex.Message}");
+                        }
+                    }
+
+                    // Add or update the document in the index index
+                    var addBatch = IndexDocumentsBatch.Create(IndexDocumentsAction.MergeOrUpload(doc));
+                    client.IndexDocuments(addBatch, options);
+                }
             }
             catch (Exception e)
             {
