@@ -84,6 +84,7 @@ stages:
       dockerImage: '${{ variables.containerRegistry }}.azurecr.io/${{ variables.repositoryName }}:$(Build.BuildId)'
       functionApp: '${{ variables.functionAppName }}'
       kvUri: '${{ variables.kvUriName }}'
+      aspNetCoreEnvironment: 'Development'
 
 # Release stage Test
 - stage: 'Test'
@@ -110,6 +111,7 @@ stages:
       dockerImage: '${{ variables.containerRegistry }}.azurecr.io/${{ variables.repositoryName }}:$(Build.BuildId)'
       functionApp: '${{ variables.functionAppName }}'
       kvUri: '${{ variables.kvUriName }}'
+      aspNetCoreEnvironment: 'Test'
 
 # Release stage Prod
 - stage: 'Prod'
@@ -136,3 +138,4 @@ stages:
       dockerImage: '${{ variables.containerRegistry }}.azurecr.io/${{ variables.repositoryName }}:$(Build.BuildId)'
       functionApp: '${{ variables.functionAppName }}'
       kvUri: '${{ variables.kvUriName }}'
+      aspNetCoreEnvironment: 'Prod'
