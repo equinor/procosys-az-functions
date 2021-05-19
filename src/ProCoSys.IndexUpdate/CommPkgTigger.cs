@@ -30,14 +30,9 @@ namespace ProCoSys.IndexUpdate
             try
             {
                 // Search Index Configuration
-                //var indexName = Environment.GetEnvironmentVariable("Index_Name");
-                //var indexEndpoint = Environment.GetEnvironmentVariable("Index_Endpoint");
-                //var indexKey = Environment.GetEnvironmentVariable("Index_Key");
-
                 var indexName = _configuration.GetValue<string>("Index_Name"); 
                 var indexEndpoint = _configuration.GetValue<string>("Index_Endpoint");  
-                var indexKey = _configuration.GetValue<string>("Index_Key"); 
-
+                var indexKey = _configuration.GetValue<string>("Index_Key");
 
                 if (indexName == null || indexEndpoint == null || indexKey == null)
                 {
@@ -46,10 +41,9 @@ namespace ProCoSys.IndexUpdate
                 }
 
                 log.LogInformation($"C# Using index {indexName} at {indexEndpoint}");
-                
 
                 // Get the service endpoint and API key from the environment
-                Uri endpoint = new Uri(indexEndpoint);
+                Uri endpoint = new Uri($"https://{indexEndpoint}.search.windows.net/");
 
                 // Create a client
                 AzureKeyCredential credential = new AzureKeyCredential(indexKey);
