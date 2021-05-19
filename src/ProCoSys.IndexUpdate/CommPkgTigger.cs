@@ -45,6 +45,9 @@ namespace ProCoSys.IndexUpdate
                     return;
                 }
 
+                log.LogInformation($"C# Using index {indexName} at {indexEndpoint}");
+                
+
                 // Get the service endpoint and API key from the environment
                 Uri endpoint = new Uri(indexEndpoint);
 
