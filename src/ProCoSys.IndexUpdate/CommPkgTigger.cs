@@ -6,25 +6,38 @@ using Azure;
 using Azure.Search.Documents;
 using Azure.Search.Documents.Models;
 using Microsoft.Azure.WebJobs;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using ProCoSys.IndexUpdate.IndexModel;
 using ProCoSys.IndexUpdate.Topics;
 
 namespace ProCoSys.IndexUpdate
 {
-    public static class CommPkgTigger
+    public class CommPkgTigger
     {
+        private IConfiguration _configuration;
+
+        public CommPkgTigger(IConfiguration configuration)
+        {
+            _configuration = configuration;
+        }
+
         [FunctionName("CommPkgTigger")]
-        public static void Run([ServiceBusTrigger("commpkg", "search_commpkg", Connection = "ConnectionString")]string mySbMsg, ILogger log)
+        public void Run([ServiceBusTrigger("commpkg", "search_commpkg", Connection = "ConnectionString")]string mySbMsg, ILogger log)
         {
             log.LogInformation($"C# ServiceBus topic trigger function processed message: {mySbMsg}");
 
             try
             {
                 // Search Index Configuration
-                var indexName = Environment.GetEnvironmentVariable("Index_Name");
-                var indexEndpoint = Environment.GetEnvironmentVariable("Index_Endpoint");
-                var indexKey = Environment.GetEnvironmentVariable("Index_Key");
+                //var indexName = Environment.GetEnvironmentVariable("Index_Name");
+                //var indexEndpoint = Environment.GetEnvironmentVariable("Index_Endpoint");
+                //var indexKey = Environment.GetEnvironmentVariable("Index_Key");
+
+                var indexName = _configuration.GetValue<string>("Index_Name"); 
+                var indexEndpoint = _configuration.GetValue<string>("Index_Endpoint");  
+                var indexKey = _configuration.GetValue<string>("Index_Key"); 
+
 
                 if (indexName == null || indexEndpoint == null || indexKey == null)
                 {
