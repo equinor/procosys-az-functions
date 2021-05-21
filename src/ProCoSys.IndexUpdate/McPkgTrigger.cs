@@ -5,25 +5,33 @@ using Azure;
 using Azure.Search.Documents;
 using Azure.Search.Documents.Models;
 using Microsoft.Azure.WebJobs;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using ProCoSys.IndexUpdate.IndexModel;
 using ProCoSys.IndexUpdate.Topics;
 
 namespace ProCoSys.IndexUpdate
 {
-    public static class McPkgTrigger
+    public class McPkgTrigger
     {
-        [FunctionName("McPkgTigger")]
-        public static void Run([ServiceBusTrigger("mcpkg", "search_mcpkg", Connection = "ConnectionString")]string mySbMsg, ILogger log)
+        private readonly IConfiguration _configuration;
+
+        public McPkgTrigger(IConfiguration configuration)
+        {
+            _configuration = configuration;
+        }
+
+        [FunctionName("McPkgTrigger")]
+        public void Run([ServiceBusTrigger("mcpkg", "search_mcpkg", Connection = "ConnectionString")]string mySbMsg, ILogger log)
         {
             log.LogInformation($"C# ServiceBus topic trigger function processed message: {mySbMsg}");
 
             try
             {
                 // Search Index Configuration
-                var indexName = Environment.GetEnvironmentVariable("Index_Name");
-                var indexEndpoint = Environment.GetEnvironmentVariable("Index_Endpoint");
-                var indexKey = Environment.GetEnvironmentVariable("Index_Key");
+                var indexName = _configuration.GetValue<string>("Index_Name");
+                var indexEndpoint = _configuration.GetValue<string>("Index_Endpoint");
+                var indexKey = _configuration.GetValue<string>("Index_Key");
 
                 if (indexName == null || indexEndpoint == null || indexKey == null)
                 {

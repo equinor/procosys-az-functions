@@ -14,14 +14,14 @@ namespace ProCoSys.IndexUpdate
 {
     public class CommPkgTrigger
     {
-        private IConfiguration _configuration;
+        private readonly IConfiguration _configuration;
 
         public CommPkgTrigger(IConfiguration configuration)
         {
             _configuration = configuration;
         }
 
-        [FunctionName("CommPkgTigger")]
+        [FunctionName("CommPkgTrigger")]
         public void Run([ServiceBusTrigger("commpkg", "search_commpkg", Connection = "ConnectionString")]string mySbMsg, ILogger log)
         {
             log.LogInformation($"C# ServiceBus topic trigger function processed message: {mySbMsg}");
