@@ -5,25 +5,33 @@ using Azure;
 using Azure.Search.Documents;
 using Azure.Search.Documents.Models;
 using Microsoft.Azure.WebJobs;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using ProCoSys.IndexUpdate.IndexModel;
 using ProCoSys.IndexUpdate.Topics;
 
 namespace ProCoSys.IndexUpdate
 {
-    public static class CommPkgTigger
+    public class CommPkgTrigger
     {
-        [FunctionName("CommPkgTigger")]
-        public static void Run([ServiceBusTrigger("commpkg", "search_commpkg", Connection = "ConnectionString")]string mySbMsg, ILogger log)
+        private readonly IConfiguration _configuration;
+
+        public CommPkgTrigger(IConfiguration configuration)
+        {
+            _configuration = configuration;
+        }
+
+        [FunctionName("CommPkgTrigger")]
+        public void Run([ServiceBusTrigger("commpkg", "search_commpkg", Connection = "ConnectionString")]string mySbMsg, ILogger log)
         {
             log.LogInformation($"C# ServiceBus topic trigger function processed message: {mySbMsg}");
 
             try
             {
                 // Search Index Configuration
-                var indexName = Environment.GetEnvironmentVariable("Index_Name");
-                var indexEndpoint = Environment.GetEnvironmentVariable("Index_Endpoint");
-                var indexKey = Environment.GetEnvironmentVariable("Index_Key");
+                var indexName = _configuration.GetValue<string>("Index_Name"); 
+                var indexEndpoint = _configuration.GetValue<string>("Index_Endpoint");  
+                var indexKey = _configuration.GetValue<string>("Index_Key");
 
                 if (indexName == null || indexEndpoint == null || indexKey == null)
                 {
@@ -31,8 +39,10 @@ namespace ProCoSys.IndexUpdate
                     return;
                 }
 
+                log.LogInformation($"C# Using index {indexName} at {indexEndpoint}");
+
                 // Get the service endpoint and API key from the environment
-                var endpoint = new Uri(indexEndpoint);
+                Uri endpoint = new Uri($"https://{indexEndpoint}.search.windows.net/");
 
                 // Create a client
                 var credential = new AzureKeyCredential(indexKey);
