@@ -40,7 +40,7 @@ namespace ProCoSys.IndexUpdate
                 }
 
                 // Get the service endpoint and API key from the environment
-                var endpoint = new Uri(indexEndpoint);
+                Uri endpoint = new Uri($"https://{indexEndpoint}.search.windows.net/");
 
                 // Create a client
                 var credential = new AzureKeyCredential(indexKey);
