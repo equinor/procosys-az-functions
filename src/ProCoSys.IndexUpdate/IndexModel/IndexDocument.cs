@@ -13,5 +13,6 @@ namespace ProCoSys.IndexUpdate.IndexModel
         public List<string> ProjectNames { get; set; }
         public CommPkg CommPkg { get; set; }
         public McPkg McPkg { get; set; }
+        public Tag Tag { get; set; }
     }
 }
