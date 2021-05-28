@@ -8,7 +8,7 @@ namespace ProCoSys.IndexUpdate
         public static string GenerateKey(string keyString)
         {
             var keyBytes = Encoding.UTF8.GetBytes(keyString);
-            return Convert.ToBase64String(keyBytes);
+            return Convert.ToBase64String(keyBytes).Replace("/", "_").Replace("+", "-"); // URL safe base64
         }
     }
 }
