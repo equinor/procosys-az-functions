@@ -14,5 +14,6 @@ namespace ProCoSys.IndexUpdate.IndexModel
         public CommPkg CommPkg { get; set; }
         public McPkg McPkg { get; set; }
         public Tag Tag { get; set; }
+        public PunchItem PunchItem { get; set; }
     }
 }
