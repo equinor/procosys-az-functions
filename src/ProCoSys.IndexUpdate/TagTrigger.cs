@@ -5,11 +5,11 @@ using System.Text.Json;
 using Azure;
 using Azure.Search.Documents;
 using Azure.Search.Documents.Models;
+using Equinor.ProCoSys.PcsServiceBus.Topics;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using ProCoSys.IndexUpdate.IndexModel;
-using ProCoSys.IndexUpdate.Topics;
 
 namespace ProCoSys.IndexUpdate
 {
