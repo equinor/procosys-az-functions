@@ -2,20 +2,17 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace ProCoSys.IndexUpdate
+namespace ProCoSys.IndexUpdate;
+
+public class Startup : FunctionsStartup
 {
-    public class Startup : FunctionsStartup
+    public override void Configure(IFunctionsHostBuilder builder)
     {
-        public override void Configure(IFunctionsHostBuilder builder)
-        {
+        var config = new ConfigurationBuilder()
+            .AddJsonFile("local.settings.json", optional: true, reloadOnChange: true)
+            .AddEnvironmentVariables()
+            .Build();
 
-            var config = new ConfigurationBuilder()
-                .AddJsonFile("local.settings.json", optional: true, reloadOnChange: true)
-                .AddEnvironmentVariables()
-                .Build();
-
-            builder.Services.AddSingleton(config);
-
-        }
+        builder.Services.AddSingleton(config);
     }
 }
