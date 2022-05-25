@@ -14,8 +14,6 @@ public class DateTimeConverterUsingDateTimeParse : JsonConverter<DateTime>
         return DateTime.Parse(reader.GetString() ?? string.Empty);
     }
 
-    public override void Write(Utf8JsonWriter writer, DateTime value, JsonSerializerOptions options)
-    {
-        writer.WriteStringValue(value.ToString(CultureInfo.InvariantCulture));
-    }
+    public override void Write(Utf8JsonWriter writer, DateTime value, JsonSerializerOptions options) 
+        => writer.WriteStringValue(value.ToString(CultureInfo.InvariantCulture));
 }
