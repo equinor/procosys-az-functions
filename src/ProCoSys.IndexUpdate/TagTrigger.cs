@@ -47,8 +47,11 @@ namespace ProCoSys.IndexUpdate
                 var credential = new AzureKeyCredential(indexKey);
                 var client = new SearchClient(endpoint, indexName, credential);
 
+                var serializerOptions = new JsonSerializerOptions();
+                serializerOptions.Converters.Add(new DateTimeConverterUsingDateTimeParse());
+
                 // Deserialize message
-                var msg = JsonSerializer.Deserialize<TagTopic>(mySbMsg);
+                var msg = JsonSerializer.Deserialize<TagTopic>(mySbMsg,serializerOptions);
 
                 // Calculate key for document
                 if (msg != null)
