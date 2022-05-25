@@ -10,83 +10,83 @@ using Microsoft.Extensions.Logging;
 using ProCoSys.IndexUpdate.IndexModel;
 using ProCoSys.IndexUpdate.Topics;
 
-namespace ProCoSys.IndexUpdate
+namespace ProCoSys.IndexUpdate;
+
+public class PunchListItemTrigger
 {
-    public class PuncListItemTrigger
+    private readonly IConfiguration _configuration;
+
+    public PunchListItemTrigger(IConfiguration configuration)
     {
-        private readonly IConfiguration _configuration;
+        _configuration = configuration;
+    }
 
-        public PuncListItemTrigger(IConfiguration configuration)
+    [FunctionName("PunchListItemTrigger")]
+    public void Run([ServiceBusTrigger("punchlistitem", "search_punchlistitem", Connection = "ConnectionString")]string mySbMsg, ILogger log)
+    {
+        log.LogInformation($"C# ServiceBus punchlistitem topic trigger function processed message: {mySbMsg}");
+
+        try
         {
-            _configuration = configuration;
-        }
+            // Search Index Configuration
+            var indexName = _configuration.GetValue<string>("Index_Name");
+            var indexEndpoint = _configuration.GetValue<string>("Index_Endpoint");
+            var indexKey = _configuration.GetValue<string>("Index_Key");
 
-        [FunctionName("PuncListItemTrigger")]
-        public void Run([ServiceBusTrigger("punchlistitem", "search_punchlistitem", Connection = "ConnectionString")]string mySbMsg, ILogger log)
-        {
-            log.LogInformation($"C# ServiceBus punchlistitem topic trigger function processed message: {mySbMsg}");
-
-            try
+            if (indexName == null || indexEndpoint == null || indexKey == null)
             {
-                // Search Index Configuration
-                var indexName = _configuration.GetValue<string>("Index_Name");
-                var indexEndpoint = _configuration.GetValue<string>("Index_Endpoint");
-                var indexKey = _configuration.GetValue<string>("Index_Key");
+                log.LogError($"Invalid configuration");
+                return;
+            }
 
-                if (indexName == null || indexEndpoint == null || indexKey == null)
+            // Get the service endpoint and API key from the environment
+            var endpoint = new Uri($"https://{indexEndpoint}.search.windows.net/");
+
+            // Create a client
+            var credential = new AzureKeyCredential(indexKey);
+            var client = new SearchClient(endpoint, indexName, credential);
+
+            // Deserialize message
+            var serializerOptions = new JsonSerializerOptions();
+            serializerOptions.Converters.Add(new DateTimeConverterUsingDateTimeParse());
+            var msg = JsonSerializer.Deserialize<PunchListItemTopic>(mySbMsg,serializerOptions);
+
+            // Calculate key for document
+            if (msg != null)
+            {
+                var key = KeyHelper.GenerateKey($"punchitem:{msg.Plant}:{msg.ProjectName}:{ msg.PunchItemNo}");
+
+                // Create new document
+                var doc = new IndexDocument
                 {
-                    log.LogError($"Invalid configuration");
-                    return;
-                }
+                    Key = key,
+                    LastUpdated = msg.LastUpdated,
+                    Plant = msg.Plant,
+                    PlantName = msg.PlantName,
+                    Project = msg.ProjectName,
+                    ProjectNames = msg.ProjectNames ?? new List<string>(),
 
-                // Get the service endpoint and API key from the environment
-                Uri endpoint = new Uri($"https://{indexEndpoint}.search.windows.net/");
-
-                // Create a client
-                var credential = new AzureKeyCredential(indexKey);
-                var client = new SearchClient(endpoint, indexName, credential);
-
-                // Deserialize message
-                var msg = JsonSerializer.Deserialize<PunchListItemTopic>(mySbMsg);
-
-                // Calculate key for document
-                if (msg != null)
-                {
-                    var key = KeyHelper.GenerateKey($"punchitem:{msg.Plant}:{msg.ProjectName}:{ msg.PunchItemNo}");
-
-                    // Create new document
-                    var doc = new IndexDocument
+                    PunchItem = new PunchItem
                     {
-                        Key = key,
-                        LastUpdated = msg.LastUpdated,
-                        Plant = msg.Plant,
-                        PlantName = msg.PlantName,
-                        Project = msg.ProjectName,
-                        ProjectNames = msg.ProjectNames ?? new List<string>(),
+                        PunchItemNo = msg.PunchItemNo,
+                        Description = msg.Description,
+                        TagNo = msg.TagNo,
+                        Responsible = msg.ResponsibleCode + " " + msg.ResponsibleDescription,
+                        FormType = msg.FormType,
+                        Category = msg.Category
+                    }
+                };
 
-                        PunchItem = new PunchItem
-                        {
-                            PunchItemNo = msg.PunchItemNo,
-                            Description = msg.Description,
-                            TagNo = msg.TagNo,
-                            Responsible = msg.ResponsibleCode + " " + msg.ResponsibleDescription,
-                            FormType = msg.FormType,
-                            Category = msg.Category
-                        }
-                    };
+                var options = new IndexDocumentsOptions { ThrowOnAnyError = true };
 
-                    var options = new IndexDocumentsOptions { ThrowOnAnyError = true };
-
-
-                    // Add or update the document in the index index
-                    var addBatch = IndexDocumentsBatch.Create(IndexDocumentsAction.MergeOrUpload(doc));
-                    client.IndexDocuments(addBatch, options);
-                }
+                // Add or update the document in the index index
+                var addBatch = IndexDocumentsBatch.Create(IndexDocumentsAction.MergeOrUpload(doc));
+                client.IndexDocuments(addBatch, options);
             }
-            catch (Exception e)
-            {
-                log.LogInformation($"Error processing message: {mySbMsg} \nError: {e.Message}");
-            }
+        }
+        catch (Exception e)
+        {
+            log.LogInformation($"Error processing message: {mySbMsg} \nError: {e.Message}");
         }
     }
 }
