@@ -67,6 +67,7 @@ namespace ProCoSys.IndexUpdate
                         Plant = msg.Plant,
                         PlantName = msg.PlantName,
                         Project = msg.ProjectName,
+                        ProCoSysGuid = msg.ProcosysGuid,
                         ProjectNames = msg.ProjectNames ?? new List<string>(),
 
                         CommPkg = new CommPkg
