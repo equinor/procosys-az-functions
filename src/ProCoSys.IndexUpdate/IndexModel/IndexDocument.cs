@@ -10,6 +10,7 @@ namespace ProCoSys.IndexUpdate.IndexModel
         public string Plant { get; set; }
         public string PlantName { get; set; }
         public string Project { get; set; }
+        public string ProCoSysGuid { get; set; }
         public List<string> ProjectNames { get; set; }
         public CommPkg CommPkg { get; set; }
         public McPkg McPkg { get; set; }
