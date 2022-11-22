@@ -24,7 +24,7 @@ namespace ProCoSys.IndexUpdate
         [FunctionName("McPkgTrigger")]
         public void Run([ServiceBusTrigger("mcpkg", "search_mcpkg", Connection = "ConnectionString")]string mySbMsg, ILogger log)
         {
-            log.LogInformation($"C# ServiceBus topic trigger function processed message: {mySbMsg}");
+            log.LogInformation($"C# ServiceBus McPkg topic trigger function processed message: {mySbMsg}");
 
             try
             {
@@ -65,6 +65,7 @@ namespace ProCoSys.IndexUpdate
                         Plant = msg.Plant,
                         PlantName = msg.PlantName,
                         Project = msg.ProjectName,
+                        ProCoSysGuid = msg.ProCoSysGuid,
                         ProjectNames = msg.ProjectNames ?? new List<string>(),
 
                         McPkg = new McPkg
