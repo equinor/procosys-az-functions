@@ -64,6 +64,7 @@ public class PunchListItemTrigger
                     Plant = msg.Plant,
                     PlantName = msg.PlantName,
                     Project = msg.ProjectName,
+                    ProCoSysGuid = msg.ProCoSysGuid,
                     ProjectNames = msg.ProjectNames ?? new List<string>(),
 
                     PunchItem = new PunchItem
