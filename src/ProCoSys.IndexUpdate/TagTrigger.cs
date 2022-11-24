@@ -56,7 +56,7 @@ namespace ProCoSys.IndexUpdate
                 // Calculate key for document
                 if (msg != null)
                 {
-                    var key = KeyHelper.GenerateKey($"tag:{msg.Plant}:{msg.ProjectName}:{ Encoding.ASCII.GetString(Encoding.ASCII.GetBytes(msg.TagNo))}");
+                    var key = $"tag_{msg.ProCoSysGuid}";
 
                     // Create new document
                     var doc = new IndexDocument
@@ -86,10 +86,28 @@ namespace ProCoSys.IndexUpdate
 
                     var options = new IndexDocumentsOptions { ThrowOnAnyError = true };
 
+                    // Remove old document from index if Tag is moved (has Behavior = delete)
+                    if (msg.Behavior == "delete")
+                    {
+                        //Locate old document in index
+                        var oldDoc = (IndexDocument)client.GetDocument<IndexDocument>(key);
 
-                    // Add or update the document in the index index
-                    var addBatch = IndexDocumentsBatch.Create(IndexDocumentsAction.MergeOrUpload(doc));
-                    client.IndexDocuments(addBatch, options);
+                        try
+                        {
+                            var deleteBatch = IndexDocumentsBatch.Create(IndexDocumentsAction.Delete(oldDoc));
+                            client.IndexDocuments(deleteBatch, options);
+                        }
+                        catch (Exception ex)
+                        {
+                            throw new Exception($"Failed to delete document: {key}. Message {ex.Message}");
+                        }
+                    }
+                    else
+                    {
+                        // Add or update the document in the index index
+                        var addBatch = IndexDocumentsBatch.Create(IndexDocumentsAction.MergeOrUpload(doc));
+                        client.IndexDocuments(addBatch, options);
+                    }
                 }
             }
             catch (Exception e)

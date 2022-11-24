@@ -55,7 +55,7 @@ namespace ProCoSys.IndexUpdate
                 // Calculate key for document
                 if (msg != null)
                 {
-                    var key = KeyHelper.GenerateKey($"mcpkg:{msg.Plant}:{msg.ProjectName}:{msg.CommPkgNo}:{msg.McPkgNo}");
+                    var key = $"mcpkg_{msg.ProCoSysGuid}";
 
                     // Create new document
                     var doc = new IndexDocument
@@ -83,13 +83,11 @@ namespace ProCoSys.IndexUpdate
                     var options = new IndexDocumentsOptions { ThrowOnAnyError = true };
 
                     // Remove old document from index if McPkg is moved (has CommPkgNoOld or McPkgNoOld)
-                    if (msg.CommPkgNoOld != null || msg.McPkgNoOld != null)
+                    if (msg.Behavior == "delete")
                     {
-                        // Calculate key for the old document
-                        var keyOldDoc = KeyHelper.GenerateKey($"mcpkg:{msg.Plant}:{msg.ProjectName}:{msg.CommPkgNoOld??msg.CommPkgNo}:{msg.McPkgNoOld??msg.McPkgNo}");
 
                         //Locate old document in index
-                        var oldDoc = (IndexDocument)client.GetDocument<IndexDocument>(keyOldDoc);
+                        var oldDoc = (IndexDocument)client.GetDocument<IndexDocument>(key);
                     
                         try
                         {
@@ -101,10 +99,12 @@ namespace ProCoSys.IndexUpdate
                             throw new Exception($"Failed to delete document: {key}. Message {ex.Message}");
                         }
                     }
-
-                    // Add or update the document in the index index
-                    var addBatch = IndexDocumentsBatch.Create(IndexDocumentsAction.MergeOrUpload(doc));
-                    client.IndexDocuments(addBatch, options);
+                    else
+                    {
+                        // Add or update the document in the index index
+                        var addBatch = IndexDocumentsBatch.Create(IndexDocumentsAction.MergeOrUpload(doc));
+                        client.IndexDocuments(addBatch, options);
+                    }
                 }
             }
             catch (Exception e)

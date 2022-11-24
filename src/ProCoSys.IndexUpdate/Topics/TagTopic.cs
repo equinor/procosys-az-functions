@@ -8,6 +8,7 @@ namespace ProCoSys.IndexUpdate.Topics
         public string Plant { get; set; }
         public string PlantName { get; set; }
         public string ProCoSysGuid { get; set; }
+        public string Behavior { get; set; }
         public string TagNo { get; set; }
         public string TagNoOld { get; set; }
         public string Description { get; set; }
