@@ -79,10 +79,15 @@ namespace Equinor.ProCoSys.Config.MCWebApp
                     object parsedConfig = JsonConvert.DeserializeObject(item.Value);
                     configSet.Configuration.Add(item.Key, parsedConfig);
                 }
+                catch (JsonReaderException)
+                {
+                    // Value is not a valid JSON. Falling back to adding RAW value to output config for key.
+                    // When this is a plain value, like a number or string, its expected
+                    configSet.Configuration.Add(item.Key, item.Value);
+                }
                 catch (Exception e)
                 {
-                    log.LogWarning(e,$"Failed to format JSON for config key: {item.Key}. If this is a plain value, like a number or string, its expected", item);
-                    log.LogInformation(e,$"Falling back to adding RAW value to output config for key: {item.Key}", item);
+                    log.LogError(e, $"Failed to format JSON for config key: {item.Key}. Falling back to adding RAW value to output");
                     configSet.Configuration.Add(item.Key, item.Value);
                 }
             }
