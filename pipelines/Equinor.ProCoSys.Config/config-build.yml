@@ -1,7 +1,9 @@
-trigger:
+# Build and deploy of config-api
+
+trigger: 
   branches:
     include:
-     - main
+      - main
 
 resources:
   repositories:
