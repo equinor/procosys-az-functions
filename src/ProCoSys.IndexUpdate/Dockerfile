@@ -1,8 +1,8 @@
-﻿FROM mcr.microsoft.com/azure-functions/dotnet:4 AS base
+﻿FROM mcr.microsoft.com/azure-functions/dotnet:4-dotnet8.0 AS base
 WORKDIR /home/site/wwwroot
 EXPOSE 80
 
-FROM mcr.microsoft.com/dotnet/sdk:6.0 AS build
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
 COPY . .
 RUN dotnet build -c Release -o /app/build
