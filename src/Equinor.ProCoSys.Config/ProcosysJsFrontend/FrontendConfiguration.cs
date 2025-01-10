@@ -1,7 +1,11 @@
 using System;
+using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
+using Azure;
+using Azure.Data.AppConfiguration;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -72,7 +76,8 @@ namespace Equinor.ProCoSys.Config.ProcosysJsFrontend
             var configSet = new ConfigurationSet();
 
             // Config
-            foreach (var item in configuration.Where(x => !x.Key.StartsWith('.')))
+            foreach (var item in configuration.Where(x => !x.Key.StartsWith('.') 
+                                                          && !x.Key.StartsWith("FeatureManagement")))
             {
                 try
                 {
@@ -91,20 +96,43 @@ namespace Equinor.ProCoSys.Config.ProcosysJsFrontend
                     configSet.Configuration.Add(item.Key, item.Value);
                 }
             }
+            
+            var configClient = new ConfigurationClient(configConnectionString);
+            
+            // The key prefix for feature flags
+            var featureFlagPrefix = ".appconfig.featureflag/";
 
-            // Feature Flags
-            foreach (var item in configuration.Where(x => x.Key.StartsWith('.')))
+            var selector = new SettingSelector()
             {
-                var feature = JsonConvert.DeserializeObject<Feature>(item.Value);
+                // Using '*' as wildcard to get all keys that start with featureFlagPrefix
+                KeyFilter = $"{featureFlagPrefix}*", 
+                LabelFilter = environment
+            };
+
+            List<ConfigurationSetting> featureFlags = Task.Run(async () =>
+            {
+                List<ConfigurationSetting> settingsList = new List<ConfigurationSetting>();
+                await foreach (var setting in configClient.GetConfigurationSettingsAsync(selector))
+                {
+                    if (!setting.Key.StartsWith($"{featureFlagPrefix}FeatureManagement"))
+                    {
+                        settingsList.Add(setting);
+                    }
+                }
+                return settingsList;
+            }).GetAwaiter().GetResult();
+
+            foreach (var featureFlag in featureFlags)
+            {
+                var feature = JsonConvert.DeserializeObject<Feature>(featureFlag.Value);
 
                 bool enabled = feature.Enabled;
-                if (enabled)
+                if (enabled && feature.Conditions.Client_Filters != null)
                 {
                     var clientFilter = feature
                         .Conditions
                         .Client_Filters
-                        .Where(x => x.Name == "Microsoft.Targeting")
-                        .FirstOrDefault();
+                        .FirstOrDefault(x => x.Name == "Microsoft.Targeting");
                     if (clientFilter != null)
                     {
                         enabled = clientFilter.Parameters.Audience.Users.Contains(currentUserEmail) || clientFilter.Parameters.Audience.Groups.Any(x => x.Name == currentUserDomain);
