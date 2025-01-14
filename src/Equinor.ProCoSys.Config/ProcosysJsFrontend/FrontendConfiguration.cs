@@ -75,7 +75,7 @@ namespace Equinor.ProCoSys.Config.ProcosysJsFrontend
 
             // Config
             foreach (var item in configuration.Where(x => !x.Key.StartsWith('.') 
-                                                          && !x.Key.StartsWith("FeatureManagement")))
+                                                          && !x.Key.StartsWith("FeatureManagement"))) //Remove default items related to FeatureManagement
             {
                 try
                 {
@@ -130,7 +130,7 @@ namespace Equinor.ProCoSys.Config.ProcosysJsFrontend
                     var clientFilter = feature
                         .Conditions
                         .Client_Filters
-                        .FirstOrDefault(x => x.Name == "Microsoft.Targeting");
+                        .FirstOrDefault(x => x.Name == "Microsoft.Targeting"); //Feature flags with filters (e.g. specific users or groups)
                     if (clientFilter != null)
                     {
                         enabled = clientFilter.Parameters.Audience.Users.Contains(currentUserEmail) || clientFilter.Parameters.Audience.Groups.Any(x => x.Name == currentUserDomain);
